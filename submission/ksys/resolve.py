@@ -18,7 +18,8 @@ whole site as of that day). Candidates are ranked by:
 Conflicts: a key is contradicted when more than one value was ever shown for it (within one
 crawl or across crawls). For rates, table values compete when the key has any (prose
 values otherwise). Rate, APR and APY keys of one product slot are folded into one conflict
-so the list stays precise. Only rate-like metrics and organisation counts are reported.
+and amount tiers and model-year buckets of one product and term are folded into one entry, so the
+list stays precise. Only rate-like metrics and organisation counts are reported.
 """
 from __future__ import annotations
 
@@ -107,6 +108,17 @@ def slot_of(key: Tuple) -> Tuple:
     return key[:3]
 
 
+def coarse_slot(key: Tuple) -> Tuple:
+    """Product and term without amount tier or model-year bucket."""
+    fam, name, (term, _rank, _amount, flags), _metric = key
+    return (fam, name, (term, None, None, flags))
+
+
+def _tier_label(w: Winner) -> str:
+    parts = [p for p in (w.label or "").split(" | ") if p and p.lower() not in (w.product or "").lower()]
+    return ", ".join(parts)[:60] or w.product[:60]
+
+
 def topic_of(slot: Tuple, metrics: List[str], label: str) -> str:
     fam, name, (term, rank, amount, flags) = slot
     parts = []
@@ -149,27 +161,31 @@ def build_conflicts(hist: History, latest: Dict[Tuple, Winner]) -> List[Dict]:
     """One entry per product slot whose rate-like values (or counts) disagree anywhere in history."""
     latest_id = hist.snapshot_order[-1][0] if hist.snapshot_order else ""
     all_obs = hist.by_key()
-    slots: Dict[Tuple, Dict[str, List[Observation]]] = defaultdict(dict)
+    # One entry per product and term: amount tiers and model-year buckets of the same product are
+    # folded together (their values and winners are all listed), which keeps the list precise.
+    groups: Dict[Tuple, Dict[Tuple, List[Observation]]] = defaultdict(dict)
     for key, obs in all_obs.items():
         if key[3] in CONFLICT_METRICS:
-            slots[slot_of(key)][key[3]] = obs
+            groups[coarse_slot(key)][key] = obs
     out: List[Dict] = []
-    for slot in sorted(slots, key=lambda s: key_str(s + ("",))):
-        by_metric = slots[slot]
+    for slot in sorted(groups, key=lambda s: key_str(s + ("",))):
         values: Dict[str, List[Observation]] = defaultdict(list)
         winners: List[Winner] = []
-        for metric in sorted(by_metric):
+        group_has_table = any(o.source == "table" for obs in groups[slot].values() for o in obs)
+        for key in sorted(groups[slot], key=lambda k: key_str(k)):
+            metric = key[3]
+            if metric != "count" and group_has_table and not any(o.source == "table" for o in groups[slot][key]):
+                continue
             # Rates: only table values compete (stale calculators and landing pages keep their
             # tables; stray percentages in blog prose are not contradictions of a rate table).
-            obs = [o for o in by_metric[metric] if o.page_type != "listing"]
+            obs = [o for o in groups[slot][key] if o.page_type != "listing"]
             if metric != "count" and any(o.source == "table" for o in obs):
                 obs = [o for o in obs if o.source == "table"]
             if metric == "count" and slot[1] not in COUNT_CONFLICT_NOUNS:
                 continue
-            vals = {o.value for o in obs}
-            if len(vals) < 2:
+            if len({o.value for o in obs}) < 2:
                 continue
-            w = latest.get(slot + (metric,))
+            w = latest.get(key)
             if w is None:
                 continue
             winners.append(w)
@@ -188,15 +204,18 @@ def build_conflicts(hist: History, latest: Dict[Tuple, Winner]) -> List[Dict]:
         if not losers:
             continue
         main = max(winners, key=lambda w: (w.key[3] == "apy", w.key[3] == "apr", w.key[3]))
+        tiers = len({w.key[:3] for w in winners}) > 1
         sources = []
         for v in sorted(values):
             o = max(values[v], key=lambda o: (o.snapshot_id, o.authority, o.url))
             sources.append({"url": o.url, "snapshot_id": o.snapshot_id, "quote": f"{v}: {o.quote[:160]}"})
         out.append({
-            "topic": topic_of(slot, [w.key[3] for w in winners], main.label),
+            "topic": topic_of(slot, [w.key[3] for w in winners], "" if tiers else main.label),
             "values": sorted(values),
             "sources": sources,
-            "resolution": " / ".join(f"{w.value} {METRIC_NAMES.get(w.key[3], w.key[3])}" for w in winners),
+            "resolution": " / ".join(dict.fromkeys(
+                f"{w.value} {METRIC_NAMES.get(w.key[3], w.key[3])}" + (f" ({_tier_label(w)})" if tiers else "")
+                for w in winners)),
             "reason": _reason(main, losers, latest_id),
             "slot": key_str(slot + ("",)).rstrip("|"),
         })

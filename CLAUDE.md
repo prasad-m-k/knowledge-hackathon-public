@@ -17,7 +17,7 @@ harness/                             organizer scorer. NEVER modify (graders use
   scoring.py                         exact scoring rules (read before tuning)
   selftest/                          tiny fixture: 2 snapshots, eval.jsonl, conflicts_gold.json
 eval/public_eval.jsonl               40 practice questions. NEVER modify
-snapshots_zip/                       5 zips, oldest first (auto-unpacked by the scorer)
+snapshots_zip/                       5 zips, oldest first (auto-unpacked by the scorer); never in the public repo
 snapshots/                           unpacked folders (gitignored: snapshots/0*/)
 starter/solution.py                  naive baseline (~0.09). Do NOT put the submission here
 submission/                          OUR SOLUTION LIVES HERE
@@ -108,7 +108,7 @@ Each folder: `manifest.json` (`snapshot_id`, `taken_on`, `label`, `description`,
 - Answer only from the provided snapshots. No live website calls.
 - Each `answer()` call < 60 s (hard), aim for < 2 s p95. Ingest of all five snapshots < 30 min.
 - `requirements.txt` must list every non-stdlib package; target Python 3.11 (code must also run on 3.9+; avoid 3.12+ only syntax).
-- The data is a real credit union's website shared for this event only. Do not redistribute it; keep the GitHub repo **private** and share read access only with organizers.
+- The data is a real credit union's website shared for this event only. Do not redistribute it. Development happens in the private repo; the submission is a separate **public** repo with the snapshot zips removed from all history and no API keys (D-021).
 
 ## 8. Commands
 
@@ -132,7 +132,7 @@ After each run read `results/<name>/per_question.jsonl`: inspect `missed`, `trap
 - [ ] `submission/requirements.txt` (empty file is fine if stdlib only)
 - [ ] `submission/NOTES.md`: a few paragraphs on the approach, how "current" is decided (authority ranking, recency, as_of, tiers), and which API keys are needed (state "none" if none; flag any paid API)
 - [ ] From a fresh clone: `python harness/run_eval.py --submission submission --eval eval/public_eval.jsonl` runs cleanly with 0 errors
-- [ ] Repo pushed, private, organizers given read access
+- [ ] Public repo pushed from a filtered clone with no snapshot zips in any commit and no API keys (D-021)
 - [ ] Share repo URL and the commit SHA to be graded before the deadline (TBA)
 
 ## 10. Decision log

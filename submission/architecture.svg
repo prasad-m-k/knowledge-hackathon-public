@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="100%" height="100%" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 900" width="100%" height="100%" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
   <defs>
     <linearGradient id="hdrGrad" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#0F172A"/>
@@ -13,42 +13,55 @@
     <marker id="arrowPurple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
       <path d="M 0 1 L 10 5 L 0 9 z" fill="#8B5CF6"/>
     </marker>
+    <marker id="arrowGray" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748B"/>
+    </marker>
+    <marker id="arrowAmber" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#F59E0B"/>
+    </marker>
     <filter id="shadow" x="-2%" y="-2%" width="104%" height="108%">
       <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0F172A" flood-opacity="0.06"/>
     </filter>
   </defs>
 
   <!-- Background -->
-  <rect width="1280" height="760" fill="#F8FAFC"/>
+  <rect width="1280" height="900" fill="#F8FAFC"/>
 
   <!-- Header Banner -->
   <rect x="0" y="0" width="1280" height="76" fill="url(#hdrGrad)"/>
-  <text x="32" y="34" fill="#FFFFFF" font-size="21" font-weight="700">Temporal Knowledge System — Pipeline Architecture</text>
-  <text x="32" y="57" fill="#94A3B8" font-size="12.5">Deterministic Temporal Fact Extraction, Authority Resolution &amp; Grounded Retrieval (Pure Python Stdlib)</text>
+  <text x="32" y="34" fill="#FFFFFF" font-size="21" font-weight="700">Temporal Knowledge System: Pipeline Architecture</text>
+  <text x="32" y="57" fill="#94A3B8" font-size="12.5">Prasad MK · Fact extraction, authority resolution and passage retrieval, Python standard library only</text>
 
   <!-- Metric Badges -->
   <g transform="translate(825, 14)">
     <rect x="0" y="0" width="102" height="48" rx="8" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
     <text x="51" y="22" fill="#10B981" font-size="15" font-weight="700" text-anchor="middle">0.969</text>
-    <text x="51" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Public QA Score</text>
+    <text x="51" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Public set score</text>
 
     <rect x="110" y="0" width="102" height="48" rx="8" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5"/>
     <text x="161" y="22" fill="#60A5FA" font-size="15" font-weight="700" text-anchor="middle">0 Hits</text>
-    <text x="161" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Stale Traps</text>
+    <text x="161" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Stale hits, public</text>
 
     <rect x="220" y="0" width="102" height="48" rx="8" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5"/>
     <text x="271" y="22" fill="#A78BFA" font-size="15" font-weight="700" text-anchor="middle">1.00</text>
-    <text x="271" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Consistency</text>
+    <text x="271" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Consistency checks</text>
 
     <rect x="330" y="0" width="102" height="48" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
     <text x="381" y="22" fill="#FBBF24" font-size="15" font-weight="700" text-anchor="middle">10 ms</text>
-    <text x="381" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">p95 Latency</text>
+    <text x="381" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">p95 latency</text>
   </g>
 
+  <!-- Input -->
+  <rect x="24" y="86" width="1232" height="30" rx="8" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+  <text x="42" y="106" fill="#0F172A" font-size="11.5" font-weight="700">INPUT</text>
+  <text x="96" y="106" fill="#334155" font-size="11">Five crawls of the site, fed to ks.ingest() oldest first: 01 2026-05-12 · 02 2026-05-19 · 03 2026-06-09 · 04 2026-08-27 · 05 2026-09-28 (latest), 3,294 pages in total</text>
+  <line x1="640" y1="116" x2="640" y2="130" stroke="#64748B" stroke-width="2" marker-end="url(#arrowGray)"/>
+
+  <g transform="translate(0, 40)">
   <!-- ==================== PHASE 1: INGEST PIPELINE ==================== -->
   <rect x="24" y="92" width="1232" height="236" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5"/>
-  <text x="42" y="116" fill="#1E3A8A" font-size="13.5" font-weight="700">PHASE 1: INGESTION PIPELINE — ks.ingest(snapshot)  [5.5s across 5 snapshots / 3,294 pages]</text>
-  <text x="1238" y="116" fill="#2563EB" font-size="11.5" font-weight="600" text-anchor="end">Content-Hash Cached · Heavy Work at Ingest Only</text>
+  <text x="42" y="116" fill="#1E3A8A" font-size="13.5" font-weight="700">PHASE 1: INGESTION PIPELINE, ks.ingest(snapshot)  [5.4 s for all 5 snapshots]</text>
+  <text x="1238" y="116" fill="#2563EB" font-size="11.5" font-weight="600" text-anchor="end">Content-hash cache · all heavy work happens here</text>
 
   <!-- Stage 0 -->
   <g transform="translate(40, 130)" filter="url(#shadow)">
@@ -154,7 +167,7 @@
 
   <g transform="translate(40, 392)" filter="url(#shadow)">
     <rect width="340" height="116" rx="8" fill="#FFFFFF" stroke="#22C55E" stroke-width="1.5"/>
-    <text x="12" y="20" fill="#166534" font-size="11.5" font-weight="700">6a. Fact Resolution  —  resolve_snapshot() (resolve.py)</text>
+    <text x="12" y="20" fill="#166534" font-size="11.5" font-weight="700">6a. Fact Resolution: resolve_snapshot() (resolve.py)</text>
     <text x="12" y="39" fill="#1E293B" font-size="10.2">• Ranks live observations per (snapshot_id, canonical_key):</text>
     <text x="12" y="55" fill="#15803D" font-size="10" font-weight="600">  1. Authority Tier (A: ≥80, B: ≥50, C: &lt;50)   2. Effective Date</text>
     <text x="12" y="70" fill="#15803D" font-size="10" font-weight="600">  3. Published Date   4. Table &gt; Prose   5. Support Count</text>
@@ -164,7 +177,7 @@
 
   <g transform="translate(394, 392)" filter="url(#shadow)">
     <rect width="304" height="116" rx="8" fill="#FFFFFF" stroke="#14B8A6" stroke-width="1.5"/>
-    <text x="12" y="20" fill="#115E59" font-size="11.5" font-weight="700">6b. Passage Index  —  PassageIndex (passages.py)</text>
+    <text x="12" y="20" fill="#115E59" font-size="11.5" font-weight="700">6b. Passage Index: PassageIndex (passages.py)</text>
     <text x="12" y="39" fill="#1E293B" font-size="10.2">• Per-snapshot BM25 index over blocks &amp; table rows</text>
     <text x="12" y="55" fill="#334155" font-size="10">• Excludes listing &amp; expired pages; chunks &gt;1500 chars</text>
     <text x="12" y="71" fill="#334155" font-size="10">• Weighted by page authority + publication year recency</text>
@@ -174,57 +187,62 @@
 
   <!-- Right Box: Conflict Detection -->
   <rect x="730" y="356" width="526" height="166" rx="10" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
-  <text x="748" y="380" fill="#78350F" font-size="13.5" font-weight="700">CONTRACT METHOD: ks.conflicts()  (15% Evaluation Pillar)</text>
+  <text x="748" y="380" fill="#78350F" font-size="13.5" font-weight="700">CONFLICTS: ks.conflicts()  (15% of the final score)</text>
 
   <g transform="translate(746, 392)" filter="url(#shadow)">
     <rect width="494" height="116" rx="8" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5"/>
-    <text x="12" y="20" fill="#92400E" font-size="11.5" font-weight="700">Conflict Audit  —  build_conflicts() (resolve.py)</text>
+    <text x="12" y="20" fill="#92400E" font-size="11.5" font-weight="700">Conflict list: build_conflicts() (resolve.py)</text>
     <text x="12" y="39" fill="#1E293B" font-size="10.2">• Folds APY/APR/rate &amp; tiers per coarse (product, term) slot across history</text>
     <text x="12" y="55" fill="#334155" font-size="10">• Table values compete when present (ignores stray blog prose percentages)</text>
     <text x="12" y="71" fill="#334155" font-size="10">• Removes self-contradictions from same quote (e.g., intro vs standard APR)</text>
     <text x="12" y="87" fill="#334155" font-size="10">• Explains resolution reason (expired offer, lower-authority calc/blog, earlier crawl)</text>
-    <text x="12" y="103" fill="#B45309" font-size="10" font-weight="600">→ Returns List[Conflict(topic, values, sources, resolution, reason)]</text>
+    <text x="12" y="103" fill="#B45309" font-size="10" font-weight="600">→ List[Conflict(topic, values, sources, resolution, reason)]: 36 entries</text>
   </g>
 
   <!-- Connector Arrow Down to Phase 3 -->
   <line x1="380" y1="522" x2="380" y2="546" stroke="#8B5CF6" stroke-width="2.5" marker-end="url(#arrowPurple)"/>
+  <text x="390" y="539" fill="#6D28D9" font-size="10" font-weight="600">winning facts per snapshot</text>
+  <line x1="560" y1="522" x2="560" y2="546" stroke="#8B5CF6" stroke-width="2.5" marker-end="url(#arrowPurple)"/>
+  <text x="570" y="539" fill="#6D28D9" font-size="10" font-weight="600">BM25 index per snapshot</text>
 
   <!-- ==================== PHASE 3: QUERY & ANSWER ENGINE ==================== -->
-  <rect x="24" y="550" width="1232" height="190" rx="10" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1.5"/>
-  <text x="42" y="574" fill="#4C1D95" font-size="13.5" font-weight="700">PHASE 3: QUERY ROUTING &amp; SCORER-SAFE ANSWER SYNTHESIS — ks.answer(question, as_of=None)</text>
-  <text x="1238" y="574" fill="#6D28D9" font-size="11.5" font-weight="600" text-anchor="end">p95 Latency: 0.01s · Paraphrase &amp; Repeat Consistency: 1.00</text>
+  <rect x="24" y="550" width="1232" height="206" rx="10" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="42" y="574" fill="#4C1D95" font-size="13.5" font-weight="700">PHASE 3: QUERY ROUTING AND ANSWERING, ks.answer(question, as_of=None)</text>
+  <text x="1238" y="574" fill="#6D28D9" font-size="11.5" font-weight="600" text-anchor="end">Public set: p95 0.01 s · repeat and paraphrase checks 1.00</text>
 
   <!-- Query Box 1 -->
   <g transform="translate(40, 588)" filter="url(#shadow)">
-    <rect width="282" height="136" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+    <rect width="282" height="152" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
     <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">1. Query Parser &amp; Temporal Selector</text>
     <text x="12" y="35" fill="#6D28D9" font-size="9.8" font-weight="600">ksys/question.py :: parse()</text>
     <line x1="12" y1="42" x2="270" y2="42" stroke="#E2E8F0" stroke-width="1"/>
     <text x="12" y="58" fill="#1E293B" font-size="10">• Extracts explicit as_of or inline date</text>
     <text x="12" y="73" fill="#334155" font-size="9.8">  (&apos;as of May 2026&apos; → 2026-05-31)</text>
-    <text x="12" y="89" fill="#1E293B" font-size="10">• Picks newest snapshot ≤ target date</text>
-    <text x="12" y="105" fill="#1E293B" font-size="10">• Parses family synonyms (CD→certificate),</text>
-    <text x="12" y="120" fill="#334155" font-size="9.8">  term, model_year, amount, metric, flags</text>
+    <text x="12" y="89" fill="#1E293B" font-size="10">• Picks newest snapshot ≤ target date and</text>
+    <text x="12" y="104" fill="#334155" font-size="9.8">  uses that snapshot's 6a view and 6b index</text>
+    <text x="12" y="120" fill="#1E293B" font-size="10">• Parses family synonyms (CD→certificate),</text>
+    <text x="12" y="135" fill="#334155" font-size="9.8">  term, model_year, amount, metric, flags</text>
   </g>
-  <line x1="322" y1="656" x2="340" y2="656" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="322" y1="664" x2="340" y2="664" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
 
   <!-- Query Box 2 -->
   <g transform="translate(342, 588)" filter="url(#shadow)">
-    <rect width="298" height="136" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+    <rect width="298" height="152" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
     <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">2. Structured Fact &amp; Count Routers</text>
     <text x="12" y="35" fill="#6D28D9" font-size="9.8" font-weight="600">answer_count() · answer_link() · answer_facts()</text>
     <line x1="12" y1="42" x2="286" y2="42" stroke="#E2E8F0" stroke-width="1"/>
     <text x="12" y="58" fill="#1E293B" font-size="10">• Count Router: &apos;how many branches&apos; → 22</text>
     <text x="12" y="74" fill="#1E293B" font-size="10">• Link Router: rate URLs → product#rates</text>
-    <text x="12" y="90" fill="#1E293B" font-size="10">• Fact Router: scores table winners (auth ≥80);</text>
-    <text x="12" y="105" fill="#334155" font-size="9.8">  picks narrowest amount tier ($100k vs $832k)</text>
-    <text x="12" y="120" fill="#334155" font-size="9.8">  or lists full product table for broad queries</text>
+    <text x="12" y="90" fill="#1E293B" font-size="10">• Fact Router: table winners on pages ≥50,</text>
+    <text x="12" y="105" fill="#334155" font-size="9.8">  then ≥80 only if a rate sheet or product page has it</text>
+    <text x="12" y="121" fill="#1E293B" font-size="10">• Narrowest amount tier ($100k vs $832,750),</text>
+    <text x="12" y="136" fill="#334155" font-size="9.8">  or the full product table for broad questions</text>
   </g>
-  <line x1="640" y1="656" x2="658" y2="656" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="640" y1="664" x2="658" y2="664" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
 
   <!-- Query Box 3 -->
   <g transform="translate(660, 588)" filter="url(#shadow)">
-    <rect width="282" height="136" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+    <rect width="282" height="152" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
     <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">3. Passage Retrieval Fallback</text>
     <text x="12" y="35" fill="#6D28D9" font-size="9.8" font-weight="600">ksys/answer.py :: answer_passages()</text>
     <line x1="12" y1="42" x2="270" y2="42" stroke="#E2E8F0" stroke-width="1"/>
@@ -234,18 +252,28 @@
     <text x="12" y="104" fill="#334155" font-size="9.8">  phone number, and 9-digit routing number</text>
     <text x="12" y="120" fill="#1E293B" font-size="10">• Prepends press-release lede for context</text>
   </g>
-  <line x1="942" y1="656" x2="960" y2="656" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <line x1="942" y1="664" x2="960" y2="664" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
 
   <!-- Query Box 4 -->
   <g transform="translate(962, 588)" filter="url(#shadow)">
-    <rect width="278" height="136" rx="8" fill="#EDE9FE" stroke="#6D28D9" stroke-width="2"/>
-    <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">4. Scorer-Safe Guardrails &amp; Output</text>
+    <rect width="278" height="152" rx="8" fill="#EDE9FE" stroke="#6D28D9" stroke-width="2"/>
+    <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">4. Answer Rules &amp; Output</text>
     <text x="12" y="35" fill="#6D28D9" font-size="9.8" font-weight="600">contract.Answer(text, sources, confident)</text>
     <line x1="12" y1="42" x2="266" y2="42" stroke="#C4B5FD" stroke-width="1"/>
-    <text x="12" y="58" fill="#991B1B" font-size="10" font-weight="600">• Zero Stale-Trap Contamination:</text>
-    <text x="12" y="73" fill="#334155" font-size="9.8">  old rates in conflict_note, never in text</text>
-    <text x="12" y="89" fill="#166534" font-size="10" font-weight="600">• Honest Refusal (confident=False):</text>
+    <text x="12" y="58" fill="#991B1B" font-size="10" font-weight="600">• Text holds current values only:</text>
+    <text x="12" y="73" fill="#334155" font-size="9.8">  replaced rates go to conflict_note</text>
+    <text x="12" y="89" fill="#166534" font-size="10" font-weight="600">• Refusal (confident=False), no numbers:</text>
     <text x="12" y="104" fill="#334155" font-size="9.8">  unlisted variants (7/1 ARM, construction)</text>
-    <text x="12" y="119" fill="#334155" font-size="9.8">  &amp; unknown proper nouns state no numbers</text>
+    <text x="12" y="119" fill="#334155" font-size="9.8">  and names the site never mentions</text>
+    <text x="12" y="136" fill="#1E293B" font-size="10">• Cached by (normalised question, as_of)</text>
   </g>
+  </g>
+
+  <!-- Output -->
+  <line x1="1100" y1="780" x2="1100" y2="812" stroke="#6D28D9" stroke-width="2" marker-end="url(#arrowPurple)"/>
+  <path d="M 1256 479 H 1270 V 829 H 1258" fill="none" stroke="#F59E0B" stroke-width="2" stroke-dasharray="5 3" marker-end="url(#arrowAmber)"/>
+  <rect x="24" y="814" width="1232" height="30" rx="8" fill="#FFFFFF" stroke="#94A3B8" stroke-width="1.2"/>
+  <text x="42" y="834" fill="#0F172A" font-size="11.5" font-weight="700">OUTPUT</text>
+  <text x="108" y="834" fill="#334155" font-size="11">To harness/run_eval.py: one Answer(text, sources, confident, conflict_note) per question, and the conflict list once at the end</text>
+  <text x="1256" y="878" fill="#64748B" font-size="10.5" text-anchor="end">Prasad MK · Knowledge Hackathon submission · figures from the public practice set</text>
 </svg>

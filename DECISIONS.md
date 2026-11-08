@@ -6,7 +6,7 @@ Status values: `Accepted`, `Proposed`, `Open`, `Superseded by D-xxx`.
 
 | ID | Date | Decision | Status |
 |---|---|---|---|
-| D-001 | 2026-11-07 | Repo is private, kit at top level, solution in `submission/` | Accepted |
+| D-001 | 2026-11-07 | Repo is private, kit at top level, solution in `submission/` | Superseded by D-021 (visibility only) |
 | D-002 | 2026-11-07 | Architecture: four stages, with ETL as stage one only | Accepted |
 | D-003 | 2026-11-07 | Ingest builds a temporal fact store keyed by product, qualifiers, metric | Accepted |
 | D-004 | 2026-11-07 | Source authority ranking by page type, then recency | Accepted |
@@ -15,24 +15,25 @@ Status values: `Accepted`, `Proposed`, `Open`, `Superseded by D-xxx`.
 | D-007 | 2026-11-07 | Answer text holds only current values; refusals carry no numbers | Accepted |
 | D-008 | 2026-11-07 | Second path: passage retrieval over authoritative pages for non-rate facts | Accepted |
 | D-009 | 2026-11-07 | Deterministic offline core; LLM never required at answer time | Accepted |
-| D-010 | 2026-11-07 | Fully offline vs optional Anthropic API at ingest | Open |
+| D-010 | 2026-11-07 | Fully offline, stdlib only; no LLM or API at ingest or answer time | Accepted |
 | D-011 | 2026-11-07 | Build order and evaluation loop | Accepted |
 | D-012 | 2026-11-07 | Ingest algorithm: boilerplate strip, blocks, header-aware tables, observation log to versions | Accepted |
 | D-013 | 2026-11-07 | SQLite store with three versioned cache layers; answer path in memory | Superseded by D-015 (storage backend only) |
 | D-014 | 2026-11-07 | Dataset-agnostic rules; site-specific hints isolated in config | Accepted |
-| D-015 | 2026-11-07 | In-memory store by default; SQLite cache only when a config file enables it | Accepted |
+| D-015 | 2026-11-07 | In-memory store by default; SQLite cache only when a config file enables it (amended: only worthwhile with the D-010 LLM option) | Accepted |
 | D-016 | 2026-11-07 | Page types, authority scores and per-table effective dates (refines D-004) | Accepted |
 | D-017 | 2026-11-07 | Fact schema: product, label, parsed qualifiers, metric, value; table facts primary, prose facts secondary | Accepted |
 | D-018 | 2026-11-07 | Fact keys (family, name, signature, metric), observation log and version timelines | Accepted |
 | D-019 | 2026-11-07 | Resolution ranking per snapshot and conflict list rules | Accepted |
 | D-020 | 2026-11-07 | Question parsing, fact and passage answering, refusals, page carry-forward | Accepted |
+| D-021 | 2026-11-07 | Private repo for development; public repo without snapshots or keys for submission | Accepted |
 
 ---
 
 ## D-001: Repository layout and visibility
 
 - **Date:** 2026-11-07
-- **Status:** Accepted
+- **Status:** Superseded by D-021 for visibility. The layout (kit at top level, solution in `submission/`) still stands.
 - **Context:** The kit's rules forbid redistributing the credit union's data. Graders run `python harness/run_eval.py --submission <folder>` from a fresh clone.
 - **Decision:** Private GitHub repo `prasad-m-k/knowledge-hackathon`. The kit is unpacked at the repo top level so the scorer runs from a fresh clone. The solution lives in `submission/` (never `starter/`). The outer kit zip is gitignored; `snapshots/0*/` stays gitignored per the kit.
 - **Consequences:** Organizers must be given read access before the deadline.
@@ -96,9 +97,12 @@ Status values: `Accepted`, `Proposed`, `Open`, `Superseded by D-xxx`.
 ## D-010: LLM at ingest (fully offline vs optional API)
 
 - **Date:** 2026-11-07
-- **Status:** Open
+- **Status:** Accepted
 - **Options:** (a) Fully offline: stdlib, possibly `rank_bm25`. (b) Optional Anthropic API at ingest to extract facts from awkward pages, results cached and committed, declared in NOTES.md, with a working offline fallback.
 - **Leaning:** (a) as the baseline; revisit (b) only if extraction misses are a measurable failure class.
+- **Decision (2026-11-07):** (a). The submission uses only the Python standard library (BM25 is implemented in `ksys/passages.py`, so `rank_bm25` is not needed) and `requirements.txt` is empty. No API key, no network call and no LLM is used at ingest or answer time.
+- **Reason:** extraction misses never became a measurable failure class. The public eval scores 0.969 with zero stale-trap hits, and the only zero-score item (`dup-005`) has no must-include tokens, so an extraction model would not change it. An API dependency would add a key the graders may not supply, a paid service, and a source of nondeterminism, for no measured gain.
+- **Consequences:** NOTES.md states that no API keys are needed. Option (b) stays available if the hidden set exposes a new failure class, and it would need a new entry.
 
 ## D-011: Build order
 
@@ -146,6 +150,7 @@ Status values: `Accepted`, `Proposed`, `Open`, `Superseded by D-xxx`.
 - **Context:** Evaluators should be able to run the submission with no setup, no extra modules and no files written. SQLite persistence only pays off across repeated runs (development, a deployment that receives new crawls).
 - **Decision:** Default backend is an in-memory store; nothing is written to disk. SQLite (stdlib `sqlite3`) is used only when a config file enables it: the path in `KSYS_CONFIG`, else `submission/ksys.config.json`, with `{"cache": {"backend": "sqlite", "path": "..."}}` (relative paths resolve against the config file). The real config file and cache files are gitignored; `submission/ksys.config.example.json` documents the format. A missing, unreadable or invalid config, or a SQLite file that cannot be opened, falls back to memory with a note on stderr and never fails ingest. Both backends share one key-value interface (`ksys/store.py`) with JSON values, so behaviour is identical. The three cache layers, versioned keys and in-memory answer path from D-013 are unchanged.
 - **Consequences:** Graders run fully in memory. `requirements.txt` stays empty for storage.
+- **Amendment (2026-11-07):** with D-010 settled on the offline path, SQLite brings no measurable benefit. The scored answer path already reads memory (p95 0.01 s), ingest is not timed beyond the 30 minute limit and takes 5.4 s, and a first run with SQLite on is slightly slower because it also writes to disk. SQLite stays optional and off by default. It is recommended only if D-010 option (b) is ever adopted, to cache model extractions made at ingest so reruns are cheap and give identical results. D-009 keeps any LLM out of `answer()`, so the cache would never sit on the timed path.
 
 ## D-016: Page classification and dates (refines D-004)
 
@@ -195,3 +200,11 @@ Status values: `Accepted`, `Proposed`, `Open`, `Superseded by D-xxx`.
   6. Refusal (`confident=False`, no numbers) when a proper noun from the question is absent from the site or the chosen context, when a rate question finds no published rate, or when nothing matches.
   7. Answers are cached by normalised question and as-of date, so repeats are identical.
 - **Results:** public eval accuracy 0.864 (starter 0.093), later 0.879 after a full-coverage bonus in passage ranking; 22/22 on reworded practice questions (`tools/check_paraphrases.py`), paraphrase and repeat consistency 1.0, p95 latency 0.01 s, ingest 5.4 s. Self-test: final score 1.0 including conflicts F1 1.0. Remaining public misses: general lobby hours cite a newsroom page instead of `/` or `/contact`; eligibility (the states are in a different section than the eligibility list), contact-information update (no page states a process), branch hour variations ("noon"), Volunteer Time Off count (expects the 2023 figure); `dup-005` has no must-include tokens and scores zero without the LLM judge.
+
+## D-021: Public submission repo without snapshots (supersedes D-001 for visibility)
+
+- **Date:** 2026-11-07
+- **Status:** Accepted
+- **Context:** The submission email asks for the solution in a public GitHub repository, with the link and the commit to review sent to the organizers, and the supplied website snapshots and any API keys excluded. The kit still says the data must not be redistributed. In the development repo the five snapshot zips (about 10 MB) have been committed since a6969ea, so deleting them in a new commit would leave them in the public history. No API keys appear in the code or the history.
+- **Decision:** `prasad-m-k/knowledge-hackathon` stays private for development. The submission is a separate public repo built from a clone whose history is rewritten with `git filter-repo --invert-paths --path-glob 'snapshots_zip/*.zip'`, so no commit ever contains a snapshot. `.gitignore` excludes `snapshots_zip/*.zip`, and `snapshots_zip/README.md` tells reviewers to copy the kit's five zips there. The harness self-test fixture (`harness/selftest/snapshots/`, synthetic pages) and the kit files stay, since the email excludes only the website snapshots and keys.
+- **Consequences:** Commit SHAs in the public repo differ from the private ones, so the SHA sent for review is taken from the public repo after the push. A dry run of the filtered copy kept all 14 commits, held no zip in any commit (296 KB pack), and scored 0.969 with 0 errors once the kit zips were copied in. Without the zips the scorer runs but scores 0, which `snapshots_zip/README.md` and NOTES.md explain.

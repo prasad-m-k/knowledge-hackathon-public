@@ -9,3 +9,7 @@ submission/ksys.config.json
 submission/cache/
 *.sqlite3
 snapshots_zip/*/
+# supplied website snapshots never go into the public repo (D-021)
+snapshots_zip/*.zip
+# Office lock files
+~$*

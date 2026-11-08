@@ -38,3 +38,7 @@ The system says "I don't know" (`confident=False`, no numbers) when the question
 ## Configuration
 
 None is needed. Optionally, a SQLite cache of extracted pages can be enabled for repeated development runs by copying `ksys.config.example.json` to `ksys.config.json`; without that file everything stays in memory and nothing is written to disk. Design decisions are logged in `DECISIONS.md` at the repository root.
+
+## Running it
+
+The supplied website snapshots are not in this repository. Copy the five zips from the hackathon kit into `snapshots_zip/` (see `snapshots_zip/README.md`), then run `python harness/run_eval.py --submission submission --eval eval/public_eval.jsonl`. The scorer unpacks them on the first run. No API keys are needed.

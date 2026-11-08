@@ -5,3 +5,7 @@ __pycache__/
 .env
 snapshots/0*/
 hackathon-knowledge-kit-participant.zip
+submission/ksys.config.json
+submission/cache/
+*.sqlite3
+snapshots_zip/*/

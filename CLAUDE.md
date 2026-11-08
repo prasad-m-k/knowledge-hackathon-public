@@ -135,6 +135,10 @@ After each run read `results/<name>/per_question.jsonl`: inspect `missed`, `trap
 - [ ] Repo pushed, private, organizers given read access
 - [ ] Share repo URL and the commit SHA to be graded before the deadline (TBA)
 
-## 10. Writing style for NOTES.md and commit messages
+## 10. Decision log
+
+All design decisions are recorded in `DECISIONS.md` (IDs `D-001`, `D-002`, ...). Read it before changing the approach. When a decision is made or changed, append a new entry and update the index table; never delete an entry, mark it `Superseded by D-xxx` instead. Resolve `Open` entries with the user before building on them.
+
+## 11. Writing style for NOTES.md and commit messages
 
 No em dashes. Plain, human prose. Author byline: Prasad MK.

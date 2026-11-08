@@ -1,0 +1,6 @@
+{
+  "cache": {
+    "backend": "sqlite",
+    "path": "cache/ksys.sqlite3"
+  }
+}

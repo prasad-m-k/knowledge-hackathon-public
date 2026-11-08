@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from typing import Dict, List, Optional, Tuple
 
-EXTRACT_VERSION = 1
+EXTRACT_VERSION = 2
 
 # ---- value parsing ------------------------------------------------------------------------
 _NUM = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
@@ -168,9 +168,11 @@ def table_facts(block: Dict) -> List[Dict]:
             roles_r = roles
         label_cells = [c for c, (role, _) in zip(row, roles_r) if role == "label" and c]
         qual_cells = [c for c, (role, _) in zip(row, roles_r) if role == "qual" and c]
-        label = " | ".join(label_cells)
-        quals = merge_quals(parse_quals(label), parse_quals(" ".join(qual_cells)), parse_quals(caption))
-        product = caption or (label_cells[0] if label_cells else "") or " / ".join(block.get("path", [])[-1:])
+        # Qualifier-column cells are part of the row label too: a "Term" column can hold the whole
+        # product name ("10 Month Fixed Jumbo Certificate Special"), not just "10 Months".
+        label = " | ".join(label_cells + qual_cells)
+        quals = merge_quals(parse_quals(label), parse_quals(caption))
+        product = caption or (label_cells[0] if label_cells else "") or label or " / ".join(block.get("path", [])[-1:])
         quote = " | ".join(f"{h}: {c}" if h else c for h, c in zip(header or [""] * len(row), row) if c)
         for col, (c, (role, metric)) in enumerate(zip(row, roles_r)):
             if role != "metric":

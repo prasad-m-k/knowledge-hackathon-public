@@ -16,6 +16,7 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 from .history import key_str
+from .passages import capitalized_tokens
 from .question import Query, tokens_of
 from .taxonomy import GENERIC_WORDS
 from .resolve import METRIC_NAMES, Winner
@@ -304,7 +305,9 @@ def title_overlap(qtok: set, p) -> bool:
 def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]:
     if not q.tokens:
         return None
-    vocab = index.vocabulary()
+    # A name must be one the site itself writes capitalized; a common word that happens to
+    # match ("discover", "express") does not count as the site mentioning the brand.
+    vocab = index.vocabulary() & index.name_vocab
     pn_tokens = []
     for pn in proper_nouns:
         toks = [t for t in tokens_of(pn) if t not in GENERIC_Q]
@@ -324,10 +327,11 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
     for score, p, _ in cands:
         ctx, md = index.context(p)
         ctx_tokens = set(tokens_of(ctx + " " + " ".join(p.path[-2:])))
+        ctx_names = capitalized_tokens(ctx + " " + " ".join(p.path[-2:]) + " " + p.title) if pn_tokens else set()
         if want and all(v.search(ctx) for v in want) and p.page_type in ("page", "home"):
             if p.url not in want_pages:
                 want_pages.append(p.url)
-        if pn_tokens and not all(t in ctx_tokens | set(tokens_of(p.title)) for t in pn_tokens):
+        if pn_tokens and not all(t in ctx_names for t in pn_tokens):
             continue
         if want and not all(v.search(ctx) for v in want):
             continue
@@ -336,7 +340,7 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
             continue
         cover = sum(index.idf.get(t, 0.0) for t in covered)
         title_hits = len(qtok & set(tokens_of(p.title + (" " + " ".join(p.path) if p.page_type == "page" and not pn_tokens else ""))))
-        pn_in_text = bool(pn_tokens) and all(t in ctx_tokens for t in pn_tokens)
+        pn_in_text = bool(pn_tokens) and all(t in capitalized_tokens(ctx) for t in pn_tokens)
         full = 1.25 if covered >= qtok else 1.0        # every question word is addressed
         final = cover * index._weight(p) * (1 + 0.3 * title_hits) * (1.5 if pn_in_text else 1.0) * full + 0.01 * score
         ranked.append((final, p, ctx, md))

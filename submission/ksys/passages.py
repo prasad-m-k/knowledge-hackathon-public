@@ -22,6 +22,19 @@ MAX_BLOCK_CHARS = 1500
 CHUNK_CHARS = 600
 
 
+# A capitalized word ("Discover", "MasterCard", "Hy-Vee", "DUBUQUE"). Names in a question are
+# matched in this form, so the verb "discover" in a blog post never stands in for the brand.
+_CAP_WORD = re.compile(r"\b[A-Z][A-Za-z]+")
+# The same, but not at the start of a line, sentence or list item, where any word is capitalized.
+_MID_CAP_WORD = re.compile(r"(?<!^)(?<![.!?:]\s)(?<![-*+]\s)\b[A-Z][A-Za-z]+", re.M)
+
+
+def capitalized_tokens(text: str, mid_sentence_only: bool = False) -> set:
+    """Normalised tokens of the capitalized words in `text` (same normalisation as tokens_of)."""
+    words = (_MID_CAP_WORD if mid_sentence_only else _CAP_WORD).findall(text)
+    return set(tokens_of(" ".join(words)))
+
+
 def _chunks(text: str) -> List[str]:
     if len(text) <= MAX_BLOCK_CHARS:
         return [text]
@@ -54,6 +67,8 @@ class PassageIndex:
         self.passages: List[Passage] = []
         self.postings: Dict[str, List[Tuple[int, int]]] = defaultdict(list)
         self.by_url: Dict[str, List[int]] = defaultdict(list)
+        # Words the site writes capitalized mid-sentence: the names it actually uses.
+        self.name_vocab: set = set()
         lengths: List[int] = []
         for url in sorted(snapshot_doc.pages):
             p = snapshot_doc.pages[url]
@@ -81,6 +96,10 @@ class PassageIndex:
                     self.passages.append(Passage(url, p.title, p.meta.page_type, p.meta.authority,
                                                  (b["i"], chunk_no), b["path"], chunk, md, p.meta.published or ""))
                     lengths.append(len(doc_tokens))
+                    # Body text counts only mid-sentence capitals; headings and titles are where
+                    # the site names its own products and programs, so every capital there counts.
+                    self.name_vocab |= capitalized_tokens(chunk, mid_sentence_only=True)
+                    self.name_vocab |= capitalized_tokens(" ".join(b["path"]) + " " + p.title)
                     for t, c in Counter(doc_tokens).items():
                         self.postings[t].append((i, c))
         self.n = len(self.passages)

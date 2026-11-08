@@ -27,9 +27,26 @@ from ksys.resolve import build_conflicts, resolve_snapshot  # noqa: E402
 logger = logging.getLogger("ksys.solution")
 
 _PROPER = re.compile(r"(?<![.?!]\s)(?<!^)\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)")
-_COMMON_CAPS = {"Dupaco", "I", "What", "How", "Who", "When", "Where", "Can", "Do", "Does", "Is", "Are", "Visa",
-                "APY", "APR", "Iowa", "Illinois", "Wisconsin", "October", "May", "June", "July", "August",
-                "September", "January", "February", "March", "April", "November", "December", "CD", "IRA"}
+# Capitalized words in a question that are not names to look up. A name the site never
+# mentions leads to an honest refusal, so these words must never trigger that check.
+_QUESTION_WORDS = ("I", "What", "How", "Who", "When", "Where", "Can", "Do", "Does", "Is", "Are")
+_SITE_TERMS = ("Dupaco", "Visa", "APY", "APR", "CD", "IRA")
+_STATES = ("Iowa", "Illinois", "Wisconsin")
+_MONTHS = ("January", "February", "March", "April", "May", "June",
+           "July", "August", "September", "October", "November", "December")
+_WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+_COMMON_CAPS = frozenset(_QUESTION_WORDS + _SITE_TERMS + _STATES + _MONTHS + _WEEKDAYS)
+
+
+def _names_in(question: str) -> List[str]:
+    """Names in the question, with common capitalized words dropped word by word, so
+    "Dupaco Visa" asks about nothing extra and "Dupaco Shared Branch" keeps "Shared Branch"."""
+    names = []
+    for m in _PROPER.finditer(question):
+        words = [w for w in m.group(1).split() if w not in _COMMON_CAPS]
+        if words:
+            names.append(" ".join(words))
+    return names
 
 
 class KnowledgeSystem:
@@ -136,8 +153,7 @@ class KnowledgeSystem:
                 if d is None:
                     d = refusal("no published rate matches this product and term")
             if d is None:
-                proper = [m.group(1) for m in _PROPER.finditer(question) if m.group(1) not in _COMMON_CAPS]
-                d = answer_passages(q, self.indexes[sid], proper)
+                d = answer_passages(q, self.indexes[sid], _names_in(question))
             if d is None:
                 d = refusal("no page answers this question")
         sources = [Source(url=u, snapshot_id=s or sid, quote=qt) for u, s, qt in d.sources]

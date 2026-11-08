@@ -318,7 +318,8 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
         cover = sum(index.idf.get(t, 0.0) for t in covered)
         title_hits = len(qtok & set(tokens_of(p.title)))
         pn_in_text = bool(pn_tokens) and all(t in ctx_tokens for t in pn_tokens)
-        final = cover * index._weight(p) * (1 + 0.3 * title_hits) * (1.5 if pn_in_text else 1.0) + 0.01 * score
+        full = 1.25 if covered >= qtok else 1.0        # every question word is addressed
+        final = cover * index._weight(p) * (1 + 0.3 * title_hits) * (1.5 if pn_in_text else 1.0) * full + 0.01 * score
         ranked.append((final, p, ctx, md))
     ranked.sort(key=lambda r: (-r[0], r[1].url, r[1].block_i))
     for final, p, ctx, md in ranked[:1]:

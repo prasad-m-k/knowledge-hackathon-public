@@ -128,6 +128,9 @@ class Observation:
     label: str
     product: str
     quals: Dict
+    block: int = 0
+    row: Optional[int] = None
+    title: str = ""
 
 
 @dataclass
@@ -166,7 +169,7 @@ class History:
                 self.log.append(Observation(
                     k, doc.snapshot_id, doc.taken_on, url, p.meta.page_type, p.meta.authority, eff,
                     p.meta.published or p.meta.url_date, f["value"], f["num"], f["unit"], f["source"],
-                    f["quote"], f["label"], f["product"], f["quals"]))
+                    f["quote"], f["label"], f["product"], f["quals"], f["block"], f.get("row"), p.title))
                 added += 1
         self._rebuild_canon()
         return added

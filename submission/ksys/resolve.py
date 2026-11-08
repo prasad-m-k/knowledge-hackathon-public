@@ -55,6 +55,11 @@ class Winner:
     label: str
     product: str
     quals: Dict
+    block: int = 0
+    row: Optional[int] = None
+    title: str = ""
+    authority: int = 0
+    source: str = "table"
     support: List[str] = field(default_factory=list)          # urls agreeing with the winner
     alternatives: Dict[str, List[str]] = field(default_factory=dict)  # other value -> urls
 
@@ -80,6 +85,7 @@ def resolve_snapshot(hist: History, snapshot_id: str) -> Dict[Tuple, Winner]:
         out[key] = Winner(
             key, best.value, best.num, best.unit, best.url, best.snapshot_id, best.taken_on, best.page_type,
             best.effective, best.quote, best.label, best.product, best.quals,
+            block=best.block, row=best.row, title=best.title, authority=best.authority, source=best.source,
             support=sorted(urls_by_value[best.value]),
             alternatives={v: sorted(u) for v, u in sorted(urls_by_value.items()) if v != best.value},
         )

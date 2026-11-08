@@ -21,6 +21,7 @@ Status values: `Accepted`, `Proposed`, `Open`, `Superseded by D-xxx`.
 | D-013 | 2026-11-07 | SQLite store with three versioned cache layers; answer path in memory | Superseded by D-015 (storage backend only) |
 | D-014 | 2026-11-07 | Dataset-agnostic rules; site-specific hints isolated in config | Accepted |
 | D-015 | 2026-11-07 | In-memory store by default; SQLite cache only when a config file enables it | Accepted |
+| D-016 | 2026-11-07 | Page types, authority scores and per-table effective dates (refines D-004) | Accepted |
 
 ---
 
@@ -141,3 +142,11 @@ Status values: `Accepted`, `Proposed`, `Open`, `Superseded by D-xxx`.
 - **Context:** Evaluators should be able to run the submission with no setup, no extra modules and no files written. SQLite persistence only pays off across repeated runs (development, a deployment that receives new crawls).
 - **Decision:** Default backend is an in-memory store; nothing is written to disk. SQLite (stdlib `sqlite3`) is used only when a config file enables it: the path in `KSYS_CONFIG`, else `submission/ksys.config.json`, with `{"cache": {"backend": "sqlite", "path": "..."}}` (relative paths resolve against the config file). The real config file and cache files are gitignored; `submission/ksys.config.example.json` documents the format. A missing, unreadable or invalid config, or a SQLite file that cannot be opened, falls back to memory with a note on stderr and never fails ingest. Both backends share one key-value interface (`ksys/store.py`) with JSON values, so behaviour is identical. The three cache layers, versioned keys and in-memory answer path from D-013 are unchanged.
 - **Consequences:** Graders run fully in memory. `requirements.txt` stays empty for storage.
+
+## D-016: Page classification and dates (refines D-004)
+
+- **Date:** 2026-11-07
+- **Status:** Accepted
+- **Context:** URL survey over all snapshots: rate sheets at `/rates` and `/business-rates`; product pages under `/personal`, `/business` and short paths (`/checking`, `/loans`); landing pages ending `-lp`, three titled "Oops ... This Offer Has Expired"; about 140 newsroom releases; blog posts under `/learn/blog`, `/business/resources/<slug>` and dated paths (`/2018/09/25/...`, `/dupacodaily/2017/...`); PDFs and spreadsheets under `/hubfs`; tag, author and category listing pages. Rate pages state "Rates are effective as of MM/DD/YYYY" per table, not per page (the September `/rates` page carries dates from 2026-01-02 to 2026-09-25 across its tables), and footnotes can repeat an older date. In the latest snapshot `/rates` and the auto loan product page show the same table with the same effective date, so effective dates act as version stamps per product group.
+- **Decision:** `ksys/classify.py` assigns one page type from general URL, title and text signals, with authority: rate_sheet 100, product 80, page 70, promo 60, document 50, home 50, legal 40, guide 35, calculator 25, news 20, blog 15, listing 5, expired 0. Recorded per page: `published` (byline date in the first blocks of articles), `url_date` (date in the URL or file name), `title_year`, `limited_time`, and `effective` per table (nearest "effective as of" line after the table in the same section, plain line preferred over footnote, else the nearest one before). Resolution (step 7) uses authority first, then effective date, then snapshot recency; expired pages never supply a current value.
+- **Results (latest snapshot):** blog 277, news 127, listing 118, calculator 59, product 37, page 36, document 28, legal 12, promo 4, expired 3, rate_sheet 2, home 1, guide 1. Published date found on 275/277 blog and 126/127 news pages.

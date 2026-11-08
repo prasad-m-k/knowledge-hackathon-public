@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from typing import Dict, List, Optional, Tuple
 
-EXTRACT_VERSION = 2
+EXTRACT_VERSION = 3
 
 # ---- value parsing ------------------------------------------------------------------------
 _NUM = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
@@ -197,9 +197,16 @@ def table_facts(block: Dict) -> List[Dict]:
 # ---- prose -----------------------------------------------------------------------------------
 _SENT = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9$])")
 _PCT_CTX = re.compile(r"\b(apy|annual percentage yield|apr|annual percentage rate|dividend|interest|rate)\b", re.I)
-COUNT_NOUNS = ("branches", "branch offices", "offices", "locations", "members", "employees", "atms",
-               "counties", "states", "learning labs", "member-owners")
-_COUNT = re.compile(rf"\b(\d{{1,3}}(?:,\d{{3}})*|\d+)\s+(?:[a-z-]+\s+)?({'|'.join(re.escape(n) for n in COUNT_NOUNS)})\b", re.I)
+COUNT_NOUNS = {
+    "branch office locations": "branches", "branch offices": "branches", "branch locations": "branches",
+    "branches": "branches", "offices": "branches", "locations": "branches",
+    "member-owners": "members", "members": "members", "employees": "employees", "atms": "atms",
+    "counties": "counties", "states": "states", "learning labs": "learning labs",
+}
+_COUNT = re.compile(r"\b(\d{1,3}(?:,\d{3})+|\d+)\s+(?:[a-z-]+\s+){0,2}?("
+                    + "|".join(re.escape(n) for n in sorted(COUNT_NOUNS, key=len, reverse=True)) + r")\b", re.I)
+# Counts about a shared network or the whole country are not the institution's own.
+_EXTERNAL_COUNT = re.compile(r"\b(nationwide|across the (?:u\.?s\.?|us|country|nation)|participating|shared branch|network)\b", re.I)
 
 
 def prose_facts(block: Dict, page_context: str) -> List[Dict]:
@@ -226,10 +233,12 @@ def prose_facts(block: Dict, page_context: str) -> List[Dict]:
                 continue
             facts.append(_prose_fact(block, sent, _fmt_pct(m.group("n")), _f(m.group("n")), "%",
                                      _metric_near(sent, m.start(), m.group("m")), quals, ctx_q, path_ctx, page_context))
+        if _EXTERNAL_COUNT.search(sent):
+            continue
         for m in _COUNT.finditer(sent):
             n = m.group(1)
             facts.append(_prose_fact(block, sent, n, _f(n), "", "count", quals, ctx_q, path_ctx, page_context,
-                                     product=m.group(2).lower()))
+                                     product=COUNT_NOUNS[m.group(2).lower()]))
     return facts
 
 

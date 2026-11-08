@@ -186,6 +186,15 @@ def answer_facts(q: Query, view: Dict[Tuple, Winner]) -> Optional[Draft]:
         top = [(slot, metrics) for sc, slot, metrics in scored if sc >= best - 1e-9]
     else:
         top = [(slot, metrics) for _, slot, metrics in scored]   # list the whole family
+    if q.amount is not None and len(top) > 1:
+        # "$100,000 or less" also falls inside "$300,000 or less": keep the narrowest tier.
+        def width(sm):
+            a = next(iter(sm[1].values())).quals.get("amount")
+            if not a:
+                return float("inf")
+            return (a[1] if a[1] is not None else float("inf")) - a[0]
+        narrow = min(width(sm) for sm in top)
+        top = [sm for sm in top if width(sm) == narrow]
     if q.superlative and len(top) > 1:
         pick = max if q.superlative == "max" else min
         top = [pick(top, key=lambda sm: (_num(sm[1][_metric_order(q, sm[0][0], sm[1])[0]]), key_str(sm[0] + ("",))))]

@@ -12,11 +12,14 @@ The store is used during ingest only; answer() reads in-memory structures (D-013
 from __future__ import annotations
 
 import json
+import logging
 import sqlite3
-import sys
+import threading
 from typing import Any, Dict, Optional, Tuple
 
 from .config import Config, load_config
+
+logger = logging.getLogger("ksys.store")
 
 
 class MemoryStore:
@@ -24,14 +27,18 @@ class MemoryStore:
 
     def __init__(self) -> None:
         self._data: Dict[Tuple[str, str], str] = {}
+        self._lock = threading.RLock()
 
     def get(self, namespace: str, key: str) -> Optional[Any]:
-        raw = self._data.get((namespace, key))
+        with self._lock:
+            raw = self._data.get((namespace, key))
         return None if raw is None else json.loads(raw)
 
     def put(self, namespace: str, key: str, value: Any) -> None:
         # Stored as JSON so both backends behave identically (no shared mutable objects).
-        self._data[(namespace, key)] = json.dumps(value, sort_keys=True)
+        dumped = json.dumps(value, sort_keys=True)
+        with self._lock:
+            self._data[(namespace, key)] = dumped
 
     def flush(self) -> None:
         pass
@@ -45,9 +52,12 @@ class SQLiteStore:
 
     def __init__(self, path) -> None:
         path.parent.mkdir(parents=True, exist_ok=True)
+        self._lock = threading.RLock()
         # check_same_thread=False: the harness calls answer() from a worker thread. The store is
         # only written during ingest, but this keeps any late read from raising.
-        self._db = sqlite3.connect(str(path), check_same_thread=False)
+        self._db = sqlite3.connect(str(path), check_same_thread=False, timeout=10.0)
+        self._db.execute("PRAGMA journal_mode=WAL")
+        self._db.execute("PRAGMA synchronous=NORMAL")
         self._db.execute(
             "CREATE TABLE IF NOT EXISTS cache (ns TEXT NOT NULL, key TEXT NOT NULL, "
             "value TEXT NOT NULL, PRIMARY KEY (ns, key))"
@@ -56,19 +66,24 @@ class SQLiteStore:
         self.path = path
 
     def get(self, namespace: str, key: str) -> Optional[Any]:
-        row = self._db.execute("SELECT value FROM cache WHERE ns = ? AND key = ?", (namespace, key)).fetchone()
+        with self._lock:
+            row = self._db.execute("SELECT value FROM cache WHERE ns = ? AND key = ?", (namespace, key)).fetchone()
         return None if row is None else json.loads(row[0])
 
     def put(self, namespace: str, key: str, value: Any) -> None:
-        self._db.execute("INSERT OR REPLACE INTO cache (ns, key, value) VALUES (?, ?, ?)",
-                         (namespace, key, json.dumps(value, sort_keys=True)))
+        dumped = json.dumps(value, sort_keys=True)
+        with self._lock:
+            self._db.execute("INSERT OR REPLACE INTO cache (ns, key, value) VALUES (?, ?, ?)",
+                             (namespace, key, dumped))
 
     def flush(self) -> None:
-        self._db.commit()
+        with self._lock:
+            self._db.commit()
 
     def close(self) -> None:
-        self._db.commit()
-        self._db.close()
+        with self._lock:
+            self._db.commit()
+            self._db.close()
 
 
 def open_store(config: Optional[Config] = None):
@@ -78,5 +93,5 @@ def open_store(config: Optional[Config] = None):
         try:
             return SQLiteStore(config.cache_path)
         except (OSError, sqlite3.Error) as e:
-            print(f"[ksys] sqlite cache unavailable at {config.cache_path} ({e}); using memory", file=sys.stderr)
+            logger.warning("sqlite cache unavailable at %s (%s); using memory", config.cache_path, e)
     return MemoryStore()

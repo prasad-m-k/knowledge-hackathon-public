@@ -153,7 +153,10 @@ class History:
 
     # -- building -----------------------------------------------------------------------------
     def add_snapshot(self, doc) -> int:
+        self.snapshot_order = [(s, t) for s, t in self.snapshot_order if s != doc.snapshot_id]
         self.snapshot_order.append((doc.snapshot_id, doc.taken_on))
+        self.snapshot_order.sort(key=lambda x: x[1])
+        self.log = [o for o in self.log if o.snapshot_id != doc.snapshot_id]
         added = 0
         for url in sorted(doc.pages):
             p = doc.pages[url]

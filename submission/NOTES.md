@@ -35,10 +35,15 @@ Other questions (hours, addresses, routing number, links, programs) use keyword 
 
 The system says "I don't know" (`confident=False`, no numbers) when the question names something the site never mentions (a branch, a product variant such as an adjustable-rate mortgage), when a rate question finds no published rate, or when nothing matches.
 
-## Configuration
+## Configuration and production readiness
 
-None is needed. Optionally, a SQLite cache of extracted pages can be enabled for repeated development runs by copying `ksys.config.example.json` to `ksys.config.json`; without that file everything stays in memory and nothing is written to disk. Design decisions are logged in `DECISIONS.md` at the repository root.
+None is needed. Optionally, a SQLite cache of extracted pages (using WAL mode for concurrency) and structured logging (`ksys.*` loggers, overridable via `KSYS_LOG_LEVEL`) can be enabled by copying `ksys.config.example.json` to `ksys.config.json`; without that file everything stays in memory and nothing is written to disk. `KnowledgeSystem` is thread-safe (`RLock`-guarded state and cache), idempotent on duplicate snapshot ingestion, and exposes `health()` and a CLI (`python submission/solution.py --health`) for operational inspection. Design decisions are logged in `DECISIONS.md` at the repository root.
 
-## Running it
+## Running and testing it
 
-The supplied website snapshots are not in this repository. Copy the five zips from the hackathon kit into `snapshots_zip/` (see `snapshots_zip/README.md`), then run `python harness/run_eval.py --submission submission --eval eval/public_eval.jsonl`. The scorer unpacks them on the first run. No API keys are needed.
+The supplied website snapshots are not in this repository. Copy the five zips from the hackathon kit into `snapshots_zip/` (see `snapshots_zip/README.md`), then run:
+
+- Public evaluation with five-snapshot conflict gold annotations: `python harness/run_eval.py --submission submission --eval eval/public_eval.jsonl --conflicts-gold eval/conflicts_gold.json`
+- Unit and integration test suite (stdlib `unittest`): `python -m unittest discover -s tests -v`
+
+The scorer unpacks the snapshot zips on the first run. No API keys are needed.

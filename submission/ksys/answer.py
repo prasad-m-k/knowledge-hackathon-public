@@ -24,7 +24,7 @@ DEPOSIT_FAMILIES = {"certificate", "savings", "money_market", "checking", "ira",
 RATE_METRICS = ("apy", "apr", "rate")
 SOFT_KEY_FLAGS = {"jumbo", "business", "intro", "introductory", "balance transfer", "roth", "traditional",
                   "refinance", "promotional", "variable", "youth", "teen", "holiday", "student", "health savings"}
-MAX_LIST = 24
+MAX_LIST = 40
 # Words that narrow a rate question to a product variant; if none of the family's published rate
 # facts mention them, the site does not publish that rate and the honest answer is a refusal.
 NARROWING = {"adjustable", "arm", "variable", "construction", "jumbo", "fha", "va", "usda", "bridge", "lot",
@@ -342,7 +342,8 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
         ranked.append((final, p, ctx, md))
     ranked.sort(key=lambda r: (-r[0], r[1].url, r[1].block_i))
     for final, p, ctx, md in ranked[:1]:
-        body = _best_sentences(ctx, qtok, limit=5) if len(ctx) > 600 else " ".join(ctx.split())
+        has_bullets = len(re.findall(r"^\s*(?:[-*+]|\d+[.)])\s+", ctx, re.M)) >= 2
+        body = _best_sentences(ctx, qtok, limit=5) if (len(ctx) > 600 and not has_bullets) else " ".join(ctx.split())
         if p.page_type in ("news", "blog"):
             lede = index.lede(p.url)
             if lede and lede[:80] not in ctx:

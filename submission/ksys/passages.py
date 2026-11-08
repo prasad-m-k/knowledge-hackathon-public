@@ -42,7 +42,7 @@ class Passage:
     title: str
     page_type: str
     authority: int
-    block_i: int
+    block_i: Tuple[int, int]
     path: List[str]
     text: str
     md: str
@@ -66,11 +66,11 @@ class PassageIndex:
                     # Tables join the index as "header: cell" rows (hours, addresses, fee lists).
                     rows = [" | ".join(f"{h}: {c}" if h else c for h, c in zip(b.get("header") or [""] * len(r), r) if c)
                             for r in b.get("rows", [])]
-                    text = "\n".join(rows)[:MAX_BLOCK_CHARS]
+                    text = "\n".join(rows)
                 else:
                     text = b["text"]
-                # Long blocks (a branch directory, a long FAQ) are split into line-aligned chunks
-                # instead of being cut off, so facts near the end stay searchable.
+                # Long blocks (a branch directory, a long FAQ, a multi-row table) are split into
+                # line-aligned chunks instead of being cut off, so facts near the end stay searchable.
                 for chunk_no, chunk in enumerate(_chunks(text)):
                     doc_tokens = tokens_of(" ".join(b["path"][-2:]) + " " + p.title.split("|")[0] + " " + chunk)
                     if not doc_tokens:
@@ -78,8 +78,8 @@ class PassageIndex:
                     i = len(self.passages)
                     self.by_url[url].append(i)
                     md = b["md"] if chunk_no == 0 and len(b["md"]) <= MAX_BLOCK_CHARS * 2 else chunk
-                    self.passages.append(Passage(url, p.title, p.meta.page_type, p.meta.authority, b["i"] * 1000 + chunk_no,
-                                                 b["path"], chunk, md, p.meta.published or ""))
+                    self.passages.append(Passage(url, p.title, p.meta.page_type, p.meta.authority,
+                                                 (b["i"], chunk_no), b["path"], chunk, md, p.meta.published or ""))
                     lengths.append(len(doc_tokens))
                     for t, c in Counter(doc_tokens).items():
                         self.postings[t].append((i, c))
@@ -112,7 +112,7 @@ class PassageIndex:
         ranked = sorted(final, key=lambda i: (-final[i], i))[:k]
         return [(final[i], self.passages[i], hits[i]) for i in ranked]
 
-    def context(self, p: Passage, max_chars: int = 700) -> Tuple[str, str]:
+    def context(self, p: Passage, max_chars: int = 1200) -> Tuple[str, str]:
         """The passage plus its neighbours in the same section: a short block (an FAQ question, a
         "Branch hours are:" label) is usually followed by the actual answer."""
         ids = self.by_url[p.url]
@@ -126,9 +126,9 @@ class PassageIndex:
             text.append(nxt.text)
             md.append(nxt.md)
             j += 1
-        if len(p.text) < 80 and pos > 0:
+        if (len(p.text) < 80 or p.block_i[1] > 0) and pos > 0:
             prev = self.passages[ids[pos - 1]]
-            if prev.path == p.path:
+            if prev.path == p.path and (len(p.text) < 80 or prev.block_i[0] == p.block_i[0]):
                 text.insert(0, prev.text)
                 md.insert(0, prev.md)
         if "charter area" in "\n".join(text).lower() and p.path:

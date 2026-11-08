@@ -8,6 +8,8 @@ seen before, in this run or, when the SQLite cache is enabled, in an earlier run
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import logging
+import time
 from typing import Dict, List
 
 from .boilerplate import clean_snapshot
@@ -15,6 +17,8 @@ from .classify import PageMeta, classify_page
 from .extract import EXTRACT_VERSION, extract_page
 from .segment import SEGMENT_VERSION, segment_page
 from .store import open_store
+
+logger = logging.getLogger("ksys.ingest")
 
 
 @dataclass
@@ -42,28 +46,49 @@ class Ingestor:
         self.snapshots: List[SnapshotDoc] = []
 
     def ingest(self, snapshot) -> SnapshotDoc:
-        cleaned = clean_snapshot(snapshot.pages)
+        if snapshot is None:
+            raise ValueError("snapshot cannot be None")
+        sid = str(getattr(snapshot, "snapshot_id", "") or "unknown")
+        taken_on = str(getattr(snapshot, "taken_on", "") or "")
+        raw_pages = list(getattr(snapshot, "pages", []) or [])
+        t0 = time.monotonic()
+        cleaned = clean_snapshot(raw_pages)
         pages: Dict[str, PageDoc] = {}
-        hits = misses = 0
+        hits = misses = fact_count = page_errors = 0
         for url in sorted(cleaned):
             c = cleaned[url]
-            key = f"{c.content_hash}:s{SEGMENT_VERSION}"
-            blocks = self.store.get("segments", key)
-            if blocks is None:
-                blocks = segment_page(c.text)
-                self.store.put("segments", key, blocks)
-                misses += 1
-            else:
-                hits += 1
-            fkey = f"{c.content_hash}:s{SEGMENT_VERSION}:x{EXTRACT_VERSION}"
-            facts = self.store.get("facts", fkey)
-            if facts is None:
-                facts = extract_page(blocks, c.title)
-                self.store.put("facts", fkey, facts)
-            pages[url] = PageDoc(url, c.title, c.fetched_at, c.content_hash, blocks,
-                                 classify_page(url, c.title, blocks), facts)
+            try:
+                key = f"{c.content_hash}:s{SEGMENT_VERSION}"
+                blocks = self.store.get("segments", key)
+                if blocks is None:
+                    blocks = segment_page(c.text)
+                    self.store.put("segments", key, blocks)
+                    misses += 1
+                else:
+                    hits += 1
+                fkey = f"{c.content_hash}:s{SEGMENT_VERSION}:x{EXTRACT_VERSION}"
+                facts = self.store.get("facts", fkey)
+                if facts is None:
+                    facts = extract_page(blocks, c.title)
+                    self.store.put("facts", fkey, facts)
+                fact_count += len(facts)
+                pages[url] = PageDoc(url, c.title, c.fetched_at, c.content_hash, blocks,
+                                     classify_page(url, c.title, blocks), facts)
+            except Exception as e:
+                page_errors += 1
+                logger.error("failed to process page %s in %s: %s", url, sid, e)
         self.store.flush()
-        doc = SnapshotDoc(snapshot.snapshot_id, snapshot.taken_on, pages,
-                          {"pages": len(pages), "segment_cache_hits": hits, "segmented": misses})
+        elapsed_ms = int((time.monotonic() - t0) * 1000)
+        stats = {
+            "pages": len(pages),
+            "segment_cache_hits": hits,
+            "segmented": misses,
+            "facts": fact_count,
+            "page_errors": page_errors,
+            "elapsed_ms": elapsed_ms,
+        }
+        logger.info("ingested %s (%d pages, %d facts, %d cache hits) in %d ms",
+                    sid, len(pages), fact_count, hits, elapsed_ms)
+        doc = SnapshotDoc(sid, taken_on, pages, stats)
         self.snapshots.append(doc)
         return doc

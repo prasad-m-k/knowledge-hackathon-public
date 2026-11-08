@@ -31,10 +31,15 @@ PROBES = ["certificate|-|10mo|fixed+jumbo+special|apy", "certificate|-|17mo|fixe
 def main() -> None:
     snap_root = Path(sys.argv[1]) if len(sys.argv) > 1 else ROOT / "snapshots"
     ing, hist = Ingestor(), History()
+    site = {}
     for d in sorted(p for p in snap_root.iterdir() if (p / "manifest.json").exists()):
         m = json.loads((d / "manifest.json").read_text())
         _, pages = load(d)
-        hist.add_snapshot(ing.ingest(Snapshot(m["snapshot_id"], m["taken_on"], pages)))
+        doc = ing.ingest(Snapshot(m["snapshot_id"], m["taken_on"], pages))
+        for url, page in site.items():
+            doc.pages.setdefault(url, page)
+        site = dict(doc.pages)
+        hist.add_snapshot(doc)
     views = {sid: resolve_snapshot(hist, sid) for sid, _ in hist.snapshot_order}
     print("== winners per snapshot")
     for probe in PROBES:
@@ -49,10 +54,12 @@ def main() -> None:
     for c in conflicts[:12]:
         print(f"  {c['topic'][:80]}\n     values={c['values']} -> {c['resolution']}\n     why: {c['reason'][:150]}")
     gold = snap_root.parent / "conflicts_gold.json"
+    if not gold.exists():
+        gold = ROOT / "eval" / "conflicts_gold.json"
     if gold.exists():
         sub = [Conflict(c["topic"], c["values"], [Source(**s) for s in c["sources"]], c["resolution"], c["reason"])
                for c in conflicts]
-        print("\n== self-test conflict score:", score_conflicts(json.loads(gold.read_text()), sub))
+        print(f"\n== conflict score ({gold.relative_to(ROOT)}):", score_conflicts(json.loads(gold.read_text()), sub))
 
 
 if __name__ == "__main__":

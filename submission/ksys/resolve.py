@@ -178,7 +178,7 @@ def build_conflicts(hist: History, latest: Dict[Tuple, Winner]) -> List[Dict]:
                 continue
             # Rates: only table values compete (stale calculators and landing pages keep their
             # tables; stray percentages in blog prose are not contradictions of a rate table).
-            obs = [o for o in groups[slot][key] if o.page_type != "listing"]
+            obs = [o for o in groups[slot][key] if o.page_type != "listing" and not (metric in RATE_METRICS and o.value == "100%")]
             if metric != "count" and any(o.source == "table" for o in obs):
                 obs = [o for o in obs if o.source == "table"]
             if metric == "count" and slot[1] not in COUNT_CONFLICT_NOUNS:

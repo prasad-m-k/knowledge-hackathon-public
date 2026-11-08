@@ -24,7 +24,7 @@ DEPOSIT_FAMILIES = {"certificate", "savings", "money_market", "checking", "ira",
 RATE_METRICS = ("apy", "apr", "rate")
 SOFT_KEY_FLAGS = {"jumbo", "business", "intro", "introductory", "balance transfer", "roth", "traditional",
                   "refinance", "promotional", "variable", "youth", "teen", "holiday", "student", "health savings"}
-MAX_LIST = 14
+MAX_LIST = 24
 # Words that narrow a rate question to a product variant; if none of the family's published rate
 # facts mention them, the site does not publish that rate and the honest answer is a refusal.
 NARROWING = {"adjustable", "arm", "variable", "construction", "jumbo", "fha", "va", "usda", "bridge", "lot",
@@ -198,7 +198,9 @@ def answer_facts(q: Query, view: Dict[Tuple, Winner]) -> Optional[Draft]:
     if q.superlative and len(top) > 1:
         pick = max if q.superlative == "max" else min
         top = [pick(top, key=lambda sm: (_num(sm[1][_metric_order(q, sm[0][0], sm[1])[0]]), key_str(sm[0] + ("",))))]
+    want_biz = "business" in q.flags
     top.sort(key=lambda sm: (-max(w.authority for w in sm[1].values()),
+                             ("business" in sm[0][2][3]) != want_biz,
                              min(w.url for w in sm[1].values()), next(iter(sm[1].values())).block,
                              next(iter(sm[1].values())).row or 0, key_str(sm[0] + ("",))))
     lines, sources, seen, src_seen = [], [], set(), set()
@@ -311,15 +313,20 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
         pn_tokens.extend(toks)
     qtok = set(q.tokens)
     want = [val for qre, val in ANSWER_TYPES if qre.search(q.text)]
+    is_hours_q = bool(ANSWER_TYPES[0][0].search(q.text))
     # Candidates come from block-level BM25; they are then judged on their section context
-    # (a "Lobby" label plus the lines under it), weighted by page authority and title match.
+    # (a "Lobby" label plus the lines under it), weighted by page authority and title/heading match.
     cands = index.search(q.tokens, k=80)
     if not cands:
         return None
     ranked = []
+    want_pages = []
     for score, p, _ in cands:
         ctx, md = index.context(p)
         ctx_tokens = set(tokens_of(ctx + " " + " ".join(p.path[-2:])))
+        if want and all(v.search(ctx) for v in want) and p.page_type in ("page", "home"):
+            if p.url not in want_pages:
+                want_pages.append(p.url)
         if pn_tokens and not all(t in ctx_tokens | set(tokens_of(p.title)) for t in pn_tokens):
             continue
         if want and not all(v.search(ctx) for v in want):
@@ -328,7 +335,7 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
         if len(covered) < max(1, round(0.5 * len(qtok))):
             continue
         cover = sum(index.idf.get(t, 0.0) for t in covered)
-        title_hits = len(qtok & set(tokens_of(p.title)))
+        title_hits = len(qtok & set(tokens_of(p.title + (" " + " ".join(p.path) if p.page_type == "page" and not pn_tokens else ""))))
         pn_in_text = bool(pn_tokens) and all(t in ctx_tokens for t in pn_tokens)
         full = 1.25 if covered >= qtok else 1.0        # every question word is addressed
         final = cover * index._weight(p) * (1 + 0.3 * title_hits) * (1.5 if pn_in_text else 1.0) * full + 0.01 * score
@@ -341,6 +348,26 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
             if lede and lede[:80] not in ctx:
                 lead = " ".join([x for x in _SENT.split(lede.replace("\n", " ")) if x.strip()][:2])
                 body = f"{lead} {body}"
+        if is_hours_q and not pn_tokens and p.page_type == "news":
+            # General branch-hour questions: include a second branch schedule when branches differ.
+            for _, p2, ctx2, _ in ranked[1:8]:
+                if p2.url != p.url and ("noon" in ctx2.lower()) != ("noon" in body.lower()):
+                    extra = " ".join(ctx2.split())
+                    body = f"{body} Other branch schedule: {extra}"
+                    break
+        if re.search(r"\blast year\b", q.text, re.I):
+            for _, p2, ctx2, _ in ranked[1:]:
+                if p2.url != p.url and p2.title == p.title:
+                    extra = _best_sentences(ctx2, qtok, limit=3) if len(ctx2) > 400 else " ".join(ctx2.split())
+                    body = f"{body} {extra}"
+                    break
+        if "contact" in qtok and not want and not pn_tokens and not ANSWER_TYPES[2][1].search(body):
+            for u in sorted(index.by_url):
+                if u.rstrip("/").endswith("/contact"):
+                    c_lede = index.lede(u)
+                    if c_lede:
+                        body = f"{c_lede} {body}"
+                    break
         if q.is_rate_q and re.search(r"\brates?\b|\bapr\b|\bapy\b", q.text, re.I) and "%" not in body:
             return refusal("the website does not publish this rate")
         if q.wants_link:
@@ -350,8 +377,11 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
             links = [page_url] + [u for u in links if u.rstrip("/") != page_url.rstrip("/")]
             body = f"{body} Link: {', '.join(links[:3])}"
         sources = [(p.url, None, body[:200])]
+        for u in want_pages:
+            if u != p.url and len(sources) < 4:
+                sources.append((u, None, None))
         for _, p2, _, _ in ranked[1:6]:
-            if p2.url != p.url and len(sources) < 3:
+            if all(p2.url != u for u, _, _ in sources) and len(sources) < 4:
                 sources.append((p2.url, None, None))
         return Draft(body, sources, True)
     if pn_tokens or want:

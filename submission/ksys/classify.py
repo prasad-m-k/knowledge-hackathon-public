@@ -44,7 +44,7 @@ LISTING_LEAVES = {"blog", "news", "newsroom", "resources", "dupaco-news", "perso
 PRODUCT_WORDS = ("loan", "checking", "savings", "saving", "card", "certificate", "mortgage", "equity",
                  "ira", "retirement", "money-market", "insurance", "account", "heloc", "cash-management",
                  "credit-line", "lending", "deposit")
-LEGAL_WORDS = ("privacy", "disclosure", "terms", "policy", "consumer-act")
+LEGAL_WORDS = ("privacy", "disclosure", "terms", "policy", "consumer-act", "conditions", "agreement")
 _EXPIRED = re.compile(r"\b(offer has expired|offer (?:has )?ended|no longer available|this offer is no longer)\b", re.I)
 _LIMITED = re.compile(r"\b(for a limited time|limited[- ]time (?:offer|only)|offer (?:ends|expires|valid through))\b", re.I)
 _EFFECTIVE = re.compile(r"\beffective\s+(?:as\s+of|on|date:?)?\s*", re.I)
@@ -79,6 +79,8 @@ def page_type(url: str, title: str, blocks: List[Dict]) -> str:
     head_text = " ".join([title] + [b["text"] for b in blocks[:3]])
     if _EXPIRED.search(title) or _EXPIRED.search(head_text):
         return "expired"
+    if any(w in s for s in segs for w in LEGAL_WORDS):
+        return "legal"
     if path.endswith(DOC_EXT):
         return "document"
     if not segs:
@@ -95,8 +97,6 @@ def page_type(url: str, title: str, blocks: List[Dict]) -> str:
         return "blog"
     if any(re.fullmatch(r"(?:[a-z]+-)?rates", s) for s in segs):
         return "rate_sheet"
-    if any(w in s for s in segs for w in LEGAL_WORDS):
-        return "legal"
     if segs[-1].endswith("-lp") or "offer" in segs[-1]:
         return "promo"
     if segs[0] == "learn":

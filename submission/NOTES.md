@@ -2,6 +2,10 @@
 
 Prasad MK
 
+![Pipeline Architecture](architecture.svg)
+
+*(An editable 2-slide PowerPoint version of this diagram is also included in [`architecture.pptx`](architecture.pptx).)*
+
 ## How it works
 
 The system runs entirely on the Python standard library and needs no API keys, no network access and no extra packages (`requirements.txt` is empty). All heavy work happens in `ingest()`: each snapshot is cleaned, split into blocks, classified and turned into facts, and the winning value for every fact is computed per snapshot. `answer()` only reads in-memory structures, so answers take a few milliseconds and the same question always gets the same answer.

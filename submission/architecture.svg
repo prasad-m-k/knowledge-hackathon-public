@@ -1,0 +1,251 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 760" width="100%" height="100%" font-family="Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="hdrGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+    <marker id="arrowBlue" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3B82F6"/>
+    </marker>
+    <marker id="arrowGreen" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#10B981"/>
+    </marker>
+    <marker id="arrowPurple" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#8B5CF6"/>
+    </marker>
+    <filter id="shadow" x="-2%" y="-2%" width="104%" height="108%">
+      <feDropShadow dx="0" dy="2" stdDeviation="2" flood-color="#0F172A" flood-opacity="0.06"/>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="760" fill="#F8FAFC"/>
+
+  <!-- Header Banner -->
+  <rect x="0" y="0" width="1280" height="76" fill="url(#hdrGrad)"/>
+  <text x="32" y="34" fill="#FFFFFF" font-size="21" font-weight="700">Temporal Knowledge System — Pipeline Architecture</text>
+  <text x="32" y="57" fill="#94A3B8" font-size="12.5">Deterministic Temporal Fact Extraction, Authority Resolution &amp; Grounded Retrieval (Pure Python Stdlib)</text>
+
+  <!-- Metric Badges -->
+  <g transform="translate(825, 14)">
+    <rect x="0" y="0" width="102" height="48" rx="8" fill="#1E293B" stroke="#10B981" stroke-width="1.5"/>
+    <text x="51" y="22" fill="#10B981" font-size="15" font-weight="700" text-anchor="middle">0.969</text>
+    <text x="51" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Public QA Score</text>
+
+    <rect x="110" y="0" width="102" height="48" rx="8" fill="#1E293B" stroke="#3B82F6" stroke-width="1.5"/>
+    <text x="161" y="22" fill="#60A5FA" font-size="15" font-weight="700" text-anchor="middle">0 Hits</text>
+    <text x="161" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Stale Traps</text>
+
+    <rect x="220" y="0" width="102" height="48" rx="8" fill="#1E293B" stroke="#8B5CF6" stroke-width="1.5"/>
+    <text x="271" y="22" fill="#A78BFA" font-size="15" font-weight="700" text-anchor="middle">1.00</text>
+    <text x="271" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">Consistency</text>
+
+    <rect x="330" y="0" width="102" height="48" rx="8" fill="#1E293B" stroke="#F59E0B" stroke-width="1.5"/>
+    <text x="381" y="22" fill="#FBBF24" font-size="15" font-weight="700" text-anchor="middle">10 ms</text>
+    <text x="381" y="38" fill="#CBD5E1" font-size="10" text-anchor="middle">p95 Latency</text>
+  </g>
+
+  <!-- ==================== PHASE 1: INGEST PIPELINE ==================== -->
+  <rect x="24" y="92" width="1232" height="236" rx="10" fill="#EFF6FF" stroke="#BFDBFE" stroke-width="1.5"/>
+  <text x="42" y="116" fill="#1E3A8A" font-size="13.5" font-weight="700">PHASE 1: INGESTION PIPELINE — ks.ingest(snapshot)  [5.5s across 5 snapshots / 3,294 pages]</text>
+  <text x="1238" y="116" fill="#2563EB" font-size="11.5" font-weight="600" text-anchor="end">Content-Hash Cached · Heavy Work at Ingest Only</text>
+
+  <!-- Stage 0 -->
+  <g transform="translate(40, 130)" filter="url(#shadow)">
+    <rect width="186" height="182" rx="8" fill="#DBEAFE" stroke="#3B82F6" stroke-width="1.5"/>
+    <text x="12" y="22" fill="#1E3A8A" font-size="12" font-weight="700">0. Crawl Carry-Forward</text>
+    <text x="12" y="37" fill="#2563EB" font-size="10" font-weight="600">solution.py</text>
+    <line x1="12" y1="45" x2="174" y2="45" stroke="#93C5FD" stroke-width="1"/>
+    <text x="12" y="64" fill="#1E293B" font-size="10.5">• Snapshots 01 → 05 ordered</text>
+    <text x="12" y="80" fill="#1E293B" font-size="10.5">  chronologically</text>
+    <text x="12" y="100" fill="#1E293B" font-size="10.5">• Carry forward prior URLs</text>
+    <text x="12" y="116" fill="#334155" font-size="10">  (missing != taken down)</text>
+    <text x="12" y="136" fill="#1E293B" font-size="10.5">• SHA-256 content hash</text>
+    <text x="12" y="152" fill="#334155" font-size="10">  reuses parsed blocks/facts</text>
+  </g>
+  <line x1="226" y1="221" x2="242" y2="221" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Stage 1 -->
+  <g transform="translate(244, 130)" filter="url(#shadow)">
+    <rect width="186" height="182" rx="8" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.5"/>
+    <text x="12" y="22" fill="#1E3A8A" font-size="12" font-weight="700">1. Boilerplate Strip</text>
+    <text x="12" y="37" fill="#2563EB" font-size="10" font-weight="600">ksys/boilerplate.py</text>
+    <line x1="12" y1="45" x2="174" y2="45" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="64" fill="#1E293B" font-size="10.5">• Pass 1: Strip repeated</text>
+    <text x="12" y="80" fill="#334155" font-size="10">  teaser sections (&gt;2% pages,</text>
+    <text x="12" y="95" fill="#334155" font-size="10">  &apos;Handpicked for You&apos;)</text>
+    <text x="12" y="115" fill="#1E293B" font-size="10.5">• Pass 2: Strip widget/form</text>
+    <text x="12" y="131" fill="#334155" font-size="10">  blocks (&gt;5% pages; &gt;20% if</text>
+    <text x="12" y="146" fill="#334155" font-size="10">  block contains %/$/hours)</text>
+    <text x="12" y="166" fill="#0F766E" font-size="10" font-weight="600">• Tables never dropped</text>
+  </g>
+  <line x1="430" y1="221" x2="446" y2="221" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Stage 2 -->
+  <g transform="translate(448, 130)" filter="url(#shadow)">
+    <rect width="186" height="182" rx="8" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.5"/>
+    <text x="12" y="22" fill="#1E3A8A" font-size="12" font-weight="700">2. Block Segmentation</text>
+    <text x="12" y="37" fill="#2563EB" font-size="10" font-weight="600">ksys/segment.py</text>
+    <line x1="12" y1="45" x2="174" y2="45" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="64" fill="#1E293B" font-size="10.5">• Blocks: Paragraph, List,</text>
+    <text x="12" y="80" fill="#334155" font-size="10">  Label, Table (header+rows)</text>
+    <text x="12" y="100" fill="#1E293B" font-size="10.5">• Tracks H1–H6 heading path</text>
+    <text x="12" y="116" fill="#334155" font-size="10">  above every block</text>
+    <text x="12" y="136" fill="#1E293B" font-size="10.5">• Merges eyebrow headings</text>
+    <text x="12" y="156" fill="#1E293B" font-size="10.5">• Binds pre-table captions</text>
+  </g>
+  <line x1="634" y1="221" x2="650" y2="221" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Stage 3 -->
+  <g transform="translate(652, 130)" filter="url(#shadow)">
+    <rect width="186" height="182" rx="8" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.5"/>
+    <text x="12" y="22" fill="#1E3A8A" font-size="12" font-weight="700">3. Authority &amp; Dates</text>
+    <text x="12" y="37" fill="#2563EB" font-size="10" font-weight="600">ksys/classify.py + dates.py</text>
+    <line x1="12" y1="45" x2="174" y2="45" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="63" fill="#1E293B" font-size="10.5">• Page authority score:</text>
+    <text x="12" y="79" fill="#15803D" font-size="9.8" font-weight="600">  rate_sheet(100), product(80)</text>
+    <text x="12" y="94" fill="#1D4ED8" font-size="9.8">  page(70), promo(60), doc(50)</text>
+    <text x="12" y="109" fill="#B45309" font-size="9.8">  calc(25), news(20), blog(15)</text>
+    <text x="12" y="124" fill="#DC2626" font-size="9.8">  listing(5), expired(0)</text>
+    <text x="12" y="144" fill="#1E293B" font-size="10.5">• Per-table Effective Date</text>
+    <text x="12" y="160" fill="#1E293B" font-size="10.5">• Byline &amp; URL dates</text>
+  </g>
+  <line x1="838" y1="221" x2="854" y2="221" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Stage 4 -->
+  <g transform="translate(856, 130)" filter="url(#shadow)">
+    <rect width="186" height="182" rx="8" fill="#FFFFFF" stroke="#60A5FA" stroke-width="1.5"/>
+    <text x="12" y="22" fill="#1E3A8A" font-size="12" font-weight="700">4. Fact Extraction</text>
+    <text x="12" y="37" fill="#2563EB" font-size="10" font-weight="600">ksys/extract.py</text>
+    <line x1="12" y1="45" x2="174" y2="45" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="64" fill="#1E293B" font-size="10.5">• Header-aware table parser</text>
+    <text x="12" y="80" fill="#334155" font-size="10">  (label vs qual vs metric cols)</text>
+    <text x="12" y="100" fill="#1E293B" font-size="10.5">• Strips glued footnotes:</text>
+    <text x="12" y="116" fill="#334155" font-size="10">  &apos;5.39% APR1&apos; → 5.39%</text>
+    <text x="12" y="136" fill="#1E293B" font-size="10.5">• Quals: term, model_year,</text>
+    <text x="12" y="152" fill="#334155" font-size="10">  amount [lo,hi], 30+ flags</text>
+    <text x="12" y="168" fill="#334155" font-size="10">• Prose rates &amp; org counts</text>
+  </g>
+  <line x1="1042" y1="221" x2="1058" y2="221" stroke="#3B82F6" stroke-width="2" marker-end="url(#arrowBlue)"/>
+
+  <!-- Stage 5 -->
+  <g transform="translate(1060, 130)" filter="url(#shadow)">
+    <rect width="180" height="182" rx="8" fill="#FFFFFF" stroke="#2563EB" stroke-width="2"/>
+    <text x="12" y="22" fill="#1E3A8A" font-size="12" font-weight="700">5. Canonical Keys</text>
+    <text x="12" y="37" fill="#2563EB" font-size="10" font-weight="600">history.py + taxonomy.py</text>
+    <line x1="12" y1="45" x2="168" y2="45" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="64" fill="#1E293B" font-size="10.5">• Key = (family, name,</text>
+    <text x="12" y="80" fill="#334155" font-size="10">  (term, my_rank, amt, flags),</text>
+    <text x="12" y="95" fill="#334155" font-size="10">  metric)</text>
+    <text x="12" y="115" fill="#1E293B" font-size="10.5">• Model-year rank (0=newest)</text>
+    <text x="12" y="131" fill="#334155" font-size="10">  aligns 2023-26 vs 2024-27</text>
+    <text x="12" y="151" fill="#1E293B" font-size="10.5">• Subset name merging</text>
+    <text x="12" y="167" fill="#334155" font-size="10">• Append-only History log</text>
+  </g>
+
+  <!-- Connector Arrows Down to Phase 2 -->
+  <line x1="380" y1="328" x2="380" y2="352" stroke="#10B981" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+  <line x1="960" y1="328" x2="960" y2="352" stroke="#10B981" stroke-width="2.5" marker-end="url(#arrowGreen)"/>
+
+  <!-- ==================== PHASE 2: RESOLUTION & CONFLICTS ==================== -->
+  <!-- Left Box: Snapshot Views & Indexes -->
+  <rect x="24" y="356" width="690" height="166" rx="10" fill="#F0FDF4" stroke="#86EFAC" stroke-width="1.5"/>
+  <text x="42" y="380" fill="#14532D" font-size="13.5" font-weight="700">PHASE 2: PER-SNAPSHOT RESOLUTION &amp; INDEXING  (In-Memory Views per Snapshot)</text>
+
+  <g transform="translate(40, 392)" filter="url(#shadow)">
+    <rect width="340" height="116" rx="8" fill="#FFFFFF" stroke="#22C55E" stroke-width="1.5"/>
+    <text x="12" y="20" fill="#166534" font-size="11.5" font-weight="700">6a. Fact Resolution  —  resolve_snapshot() (resolve.py)</text>
+    <text x="12" y="39" fill="#1E293B" font-size="10.2">• Ranks live observations per (snapshot_id, canonical_key):</text>
+    <text x="12" y="55" fill="#15803D" font-size="10" font-weight="600">  1. Authority Tier (A: ≥80, B: ≥50, C: &lt;50)   2. Effective Date</text>
+    <text x="12" y="70" fill="#15803D" font-size="10" font-weight="600">  3. Published Date   4. Table &gt; Prose   5. Support Count</text>
+    <text x="12" y="87" fill="#334155" font-size="10">• Org counts (&apos;22 branches&apos;) rank by Published Date first</text>
+    <text x="12" y="103" fill="#334155" font-size="10">• Records agreeing URLs (support) &amp; losing values (alternatives)</text>
+  </g>
+
+  <g transform="translate(394, 392)" filter="url(#shadow)">
+    <rect width="304" height="116" rx="8" fill="#FFFFFF" stroke="#14B8A6" stroke-width="1.5"/>
+    <text x="12" y="20" fill="#115E59" font-size="11.5" font-weight="700">6b. Passage Index  —  PassageIndex (passages.py)</text>
+    <text x="12" y="39" fill="#1E293B" font-size="10.2">• Per-snapshot BM25 index over blocks &amp; table rows</text>
+    <text x="12" y="55" fill="#334155" font-size="10">• Excludes listing &amp; expired pages; chunks &gt;1500 chars</text>
+    <text x="12" y="71" fill="#334155" font-size="10">• Weighted by page authority + publication year recency</text>
+    <text x="12" y="87" fill="#334155" font-size="10">• Section-context expansion joins labels (&apos;Branch hours:&apos;)</text>
+    <text x="12" y="103" fill="#334155" font-size="10">  with following schedule/answer blocks</text>
+  </g>
+
+  <!-- Right Box: Conflict Detection -->
+  <rect x="730" y="356" width="526" height="166" rx="10" fill="#FFFBEB" stroke="#FCD34D" stroke-width="1.5"/>
+  <text x="748" y="380" fill="#78350F" font-size="13.5" font-weight="700">CONTRACT METHOD: ks.conflicts()  (15% Evaluation Pillar)</text>
+
+  <g transform="translate(746, 392)" filter="url(#shadow)">
+    <rect width="494" height="116" rx="8" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5"/>
+    <text x="12" y="20" fill="#92400E" font-size="11.5" font-weight="700">Conflict Audit  —  build_conflicts() (resolve.py)</text>
+    <text x="12" y="39" fill="#1E293B" font-size="10.2">• Folds APY/APR/rate &amp; tiers per coarse (product, term) slot across history</text>
+    <text x="12" y="55" fill="#334155" font-size="10">• Table values compete when present (ignores stray blog prose percentages)</text>
+    <text x="12" y="71" fill="#334155" font-size="10">• Removes self-contradictions from same quote (e.g., intro vs standard APR)</text>
+    <text x="12" y="87" fill="#334155" font-size="10">• Explains resolution reason (expired offer, lower-authority calc/blog, earlier crawl)</text>
+    <text x="12" y="103" fill="#B45309" font-size="10" font-weight="600">→ Returns List[Conflict(topic, values, sources, resolution, reason)]</text>
+  </g>
+
+  <!-- Connector Arrow Down to Phase 3 -->
+  <line x1="380" y1="522" x2="380" y2="546" stroke="#8B5CF6" stroke-width="2.5" marker-end="url(#arrowPurple)"/>
+
+  <!-- ==================== PHASE 3: QUERY & ANSWER ENGINE ==================== -->
+  <rect x="24" y="550" width="1232" height="190" rx="10" fill="#F5F3FF" stroke="#C4B5FD" stroke-width="1.5"/>
+  <text x="42" y="574" fill="#4C1D95" font-size="13.5" font-weight="700">PHASE 3: QUERY ROUTING &amp; SCORER-SAFE ANSWER SYNTHESIS — ks.answer(question, as_of=None)</text>
+  <text x="1238" y="574" fill="#6D28D9" font-size="11.5" font-weight="600" text-anchor="end">p95 Latency: 0.01s · Paraphrase &amp; Repeat Consistency: 1.00</text>
+
+  <!-- Query Box 1 -->
+  <g transform="translate(40, 588)" filter="url(#shadow)">
+    <rect width="282" height="136" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+    <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">1. Query Parser &amp; Temporal Selector</text>
+    <text x="12" y="35" fill="#6D28D9" font-size="9.8" font-weight="600">ksys/question.py :: parse()</text>
+    <line x1="12" y1="42" x2="270" y2="42" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="58" fill="#1E293B" font-size="10">• Extracts explicit as_of or inline date</text>
+    <text x="12" y="73" fill="#334155" font-size="9.8">  (&apos;as of May 2026&apos; → 2026-05-31)</text>
+    <text x="12" y="89" fill="#1E293B" font-size="10">• Picks newest snapshot ≤ target date</text>
+    <text x="12" y="105" fill="#1E293B" font-size="10">• Parses family synonyms (CD→certificate),</text>
+    <text x="12" y="120" fill="#334155" font-size="9.8">  term, model_year, amount, metric, flags</text>
+  </g>
+  <line x1="322" y1="656" x2="340" y2="656" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+  <!-- Query Box 2 -->
+  <g transform="translate(342, 588)" filter="url(#shadow)">
+    <rect width="298" height="136" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+    <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">2. Structured Fact &amp; Count Routers</text>
+    <text x="12" y="35" fill="#6D28D9" font-size="9.8" font-weight="600">answer_count() · answer_link() · answer_facts()</text>
+    <line x1="12" y1="42" x2="286" y2="42" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="58" fill="#1E293B" font-size="10">• Count Router: &apos;how many branches&apos; → 22</text>
+    <text x="12" y="74" fill="#1E293B" font-size="10">• Link Router: rate URLs → product#rates</text>
+    <text x="12" y="90" fill="#1E293B" font-size="10">• Fact Router: scores table winners (auth ≥80);</text>
+    <text x="12" y="105" fill="#334155" font-size="9.8">  picks narrowest amount tier ($100k vs $832k)</text>
+    <text x="12" y="120" fill="#334155" font-size="9.8">  or lists full product table for broad queries</text>
+  </g>
+  <line x1="640" y1="656" x2="658" y2="656" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+  <!-- Query Box 3 -->
+  <g transform="translate(660, 588)" filter="url(#shadow)">
+    <rect width="282" height="136" rx="8" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="1.5"/>
+    <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">3. Passage Retrieval Fallback</text>
+    <text x="12" y="35" fill="#6D28D9" font-size="9.8" font-weight="600">ksys/answer.py :: answer_passages()</text>
+    <line x1="12" y1="42" x2="270" y2="42" stroke="#E2E8F0" stroke-width="1"/>
+    <text x="12" y="58" fill="#1E293B" font-size="10">• BM25 top-80 reranked by section IDF</text>
+    <text x="12" y="73" fill="#334155" font-size="9.8">  coverage × page authority × title hits</text>
+    <text x="12" y="89" fill="#1E293B" font-size="10">• Pattern verification for hours, address,</text>
+    <text x="12" y="104" fill="#334155" font-size="9.8">  phone number, and 9-digit routing number</text>
+    <text x="12" y="120" fill="#1E293B" font-size="10">• Prepends press-release lede for context</text>
+  </g>
+  <line x1="942" y1="656" x2="960" y2="656" stroke="#8B5CF6" stroke-width="2" marker-end="url(#arrowPurple)"/>
+
+  <!-- Query Box 4 -->
+  <g transform="translate(962, 588)" filter="url(#shadow)">
+    <rect width="278" height="136" rx="8" fill="#EDE9FE" stroke="#6D28D9" stroke-width="2"/>
+    <text x="12" y="20" fill="#4C1D95" font-size="11.5" font-weight="700">4. Scorer-Safe Guardrails &amp; Output</text>
+    <text x="12" y="35" fill="#6D28D9" font-size="9.8" font-weight="600">contract.Answer(text, sources, confident)</text>
+    <line x1="12" y1="42" x2="266" y2="42" stroke="#C4B5FD" stroke-width="1"/>
+    <text x="12" y="58" fill="#991B1B" font-size="10" font-weight="600">• Zero Stale-Trap Contamination:</text>
+    <text x="12" y="73" fill="#334155" font-size="9.8">  old rates in conflict_note, never in text</text>
+    <text x="12" y="89" fill="#166534" font-size="10" font-weight="600">• Honest Refusal (confident=False):</text>
+    <text x="12" y="104" fill="#334155" font-size="9.8">  unlisted variants (7/1 ARM, construction)</text>
+    <text x="12" y="119" fill="#334155" font-size="9.8">  &amp; unknown proper nouns state no numbers</text>
+  </g>
+</svg>

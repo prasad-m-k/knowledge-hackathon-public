@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from typing import Dict, List, Optional, Tuple
 
-EXTRACT_VERSION = 3
+EXTRACT_VERSION = 4
 
 # ---- value parsing ------------------------------------------------------------------------
 _NUM = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
@@ -69,7 +69,11 @@ def parse_cell_value(cell: str) -> Optional[Dict]:
 
 # ---- qualifiers ----------------------------------------------------------------------------
 _TERM = re.compile(r"\b(\d{1,3})\s*[- ]?\s*(month|mo|year|yr)s?\b", re.I)
-_MODEL_YEAR = re.compile(r"\b((?:19|20)\d{2})(?:\s*[-–]\s*(\d{2,4}))?\s+model\s+years?(\s*\(and older\))?", re.I)
+_MODEL_YEAR = re.compile(
+    r"\b(?:((?:19|20)\d{2})(?:\s*[-–]\s*(\d{2,4}))?\s+model\s+years?|"
+    r"model\s+years?\s+((?:19|20)\d{2})(?:\s*[-–]\s*(\d{2,4}))?)(\s*\(and older\))?",
+    re.I,
+)
 _AMT_RANGE = re.compile(rf"\$\s*({_NUM})\s*(?:[–—-]|to)\s*\$?\s*({_NUM})")
 _AMT_PLUS = re.compile(rf"\$\s*({_NUM})\s*(?:\+|and (?:up|over|above)|or more)", re.I)
 _AMT_CAP = re.compile(rf"\$\s*({_NUM})\s*(?:or less|and under|or under|max(?:imum)?)", re.I)
@@ -90,10 +94,12 @@ def parse_quals(text: str) -> Dict:
         q["term_months"] = n * 12 if m.group(2).lower().startswith(("y",)) else n
     m = _MODEL_YEAR.search(t)
     if m:
-        lo = int(m.group(1))
-        hi = m.group(2)
-        hi = lo if not hi else int(hi) if len(hi) == 4 else int(str(lo)[:2] + hi)
-        q["model_year"] = [1900 if m.group(3) else lo, hi]
+        y1 = m.group(1) or m.group(3)
+        y2 = m.group(2) or m.group(4)
+        lo = int(y1)
+        hi = lo if not y2 else int(y2) if len(y2) == 4 else int(str(lo)[:2] + y2)
+        lo, hi = min(lo, hi), max(lo, hi)
+        q["model_year"] = [1900 if m.group(5) else lo, hi]
     m = _AMT_RANGE.search(t)
     if m:
         q["amount"] = [_f(m.group(1)), _f(m.group(2))]
@@ -185,10 +191,14 @@ def table_facts(block: Dict) -> List[Dict]:
                 continue
             if v["hint"] in ("apr", "apy"):
                 m = v["hint"]   # a metric written in the cell beats a (sometimes mislabeled) header
+            val, unit = v["value"], v["unit"]
+            if m in ("apy", "apr", "rate") and unit == "":
+                unit = "%"
+                val = _fmt_pct(val)
             facts.append({
                 "source": "table", "block": block["i"], "row": r_i, "product": product,
                 "product_key": _norm_product(product), "label": label, "quals": quals, "metric": m,
-                "value": v["value"], "num": v["num"], "unit": v["unit"], "footnote": v["footnote"],
+                "value": val, "num": v["num"], "unit": unit, "footnote": v["footnote"],
                 "column": header[col] if header else "", "quote": quote[:300],
             })
     return facts

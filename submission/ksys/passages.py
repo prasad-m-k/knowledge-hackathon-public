@@ -131,6 +131,13 @@ class PassageIndex:
             if prev.path == p.path:
                 text.insert(0, prev.text)
                 md.insert(0, prev.md)
+        if "charter area" in "\n".join(text).lower() and p.path:
+            for k in range(pos - 1, -1, -1):
+                prev = self.passages[ids[k]]
+                if prev.path[:1] == p.path[:1] and "iowa" in prev.text.lower():
+                    text.insert(0, prev.text)
+                    md.insert(0, prev.md)
+                    break
         return "\n".join(text), "\n".join(md)
 
     def lede(self, url: str) -> str:

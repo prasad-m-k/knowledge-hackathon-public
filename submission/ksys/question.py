@@ -33,6 +33,7 @@ _TERM = re.compile(r"\b(\d{1,3})\s*[- ]?\s*(month|mo|year|yr)s?\b", re.I)
 _MODEL_YEAR = re.compile(r"\b((?:19|20)\d{2})\b(?=[^.?!]{0,25}\b(model|vehicle|car|truck|motorcycle|auto)\b)", re.I)
 _MONEY = re.compile(r"\$\s*(\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?\s*(k|thousand)?", re.I)
 _LINK_Q = re.compile(r"\b(link|url|website|web site|web address|online|page)\b", re.I)
+LINK_WORDS = {"link", "url", "website", "web", "site", "page", "online", "address"}
 _TODAY = re.compile(r"\b(today|now|currently|current|right now|still)\b", re.I)
 _SUPER_HI = re.compile(r"\b(highest|best|top|max(?:imum)?|most)\b", re.I)
 _SUPER_LO = re.compile(r"\b(lowest|cheapest|min(?:imum)?|least)\b", re.I)
@@ -132,4 +133,6 @@ def parse(question: str, as_of: Optional[str]) -> Query:
     q.is_rate_q = bool(_RATEY.search(low))
     # Search words come from the member's own wording; synonyms only help find the family.
     q.tokens = tokens_of(_numbers_as_digits(question))
+    if q.wants_link:   # "what's the link / URL" says what form the answer takes, not what it is about
+        q.tokens = [t for t in q.tokens if t not in LINK_WORDS] or q.tokens
     return q

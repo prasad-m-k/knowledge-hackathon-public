@@ -39,7 +39,8 @@ _COUNT_NOUN = {"branch": "branches", "branches": "branches", "location": "branch
 _SENT = re.compile(r"(?<=[.!?])\s+(?=[A-Z0-9“\"(])")
 # What kind of value a question asks for, and how to recognise it in a passage.
 ANSWER_TYPES = [
-    (re.compile(r"\bhours?\b|\bopen\b.*\b(when|time)\b|\bclose[sd]?\b.*\btime\b", re.I),
+    # "When will the branch close?" asks for a date, so "close" only counts with "what time".
+    (re.compile(r"\bhours?\b|\bwhat time\b|\bwhen\b.*\bopens?\b|\bopens?\b.*\b(when|time)\b", re.I),
      re.compile(r"\b\d{1,2}(?::\d{2})?\s*(?:a\.?m\.?|p\.?m\.?)|\bnoon\b", re.I)),
     (re.compile(r"\baddress\b|\bwhere is\b|\blocated\b", re.I),
      re.compile(r"\b\d{2,6}\s+[A-Z][a-z]+.*\b\d{5}\b|\b\d{2,6}\s+[A-Z][a-z]+\s+(?:St|Ave|Rd|Ln|Dr|Blvd|Way|Hwy|Road|Street|Avenue)\b")),
@@ -247,8 +248,10 @@ def answer_count(q: Query, view: Dict[Tuple, Winner]) -> Optional[Draft]:
     m = _COUNT_Q.search(q.text)
     if not m:
         return None
-    extra = [t for t in q.tokens if t not in {"how", "many", "dupaco", "have", "doe", "there", "total", "operate"}
-             and not m.group(1).lower().startswith(t[:5])]
+    count_words = {"how", "many", "dupaco", "have", "doe", "there", "total", "operate", "branch", "location",
+                   "office", "employee", "member", "atm", "full", "service", "full-service"}
+    prefixes = {w[:5] for w in count_words}
+    extra = [t for t in q.tokens if t not in count_words and t[:5] not in prefixes]
     if extra:                       # "how many employees used Volunteer Time Off" is not a size question
         return None
     noun = _COUNT_NOUN.get(m.group(1).lower(), m.group(1).lower())

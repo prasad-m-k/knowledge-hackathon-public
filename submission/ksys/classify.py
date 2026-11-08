@@ -39,8 +39,14 @@ AUTHORITY = {
 }
 
 DOC_EXT = (".pdf", ".xls", ".xlsx", ".csv", ".doc", ".docx", ".ppt", ".pptx")
-LISTING_LEAVES = {"blog", "news", "newsroom", "resources", "dupaco-news", "personal-resources",
-                  "business-resources", "press", "press-releases", "articles"}
+LISTING_LEAVES = {"blog", "news", "newsroom", "resources", "press", "press-releases", "articles"}
+# Section index pages named after an audience or the organisation: "personal-resources",
+# "business-resources", "<name>-news".
+_LISTING_LEAF = re.compile(r"[a-z0-9]+-(?:news|resources|blog)")
+# News sections: "news", "newsroom", "press", "press-releases", "<name>-news".
+_NEWS_SEG = re.compile(r"(?:[a-z0-9]+-)?(?:newsroom|news|press|press-releases)")
+# Blog sections: "blog", "<name>daily", "<name>-blog".
+_BLOG_SEG = re.compile(r"(?:[a-z0-9]+-)?blog|[a-z0-9]+daily")
 PRODUCT_WORDS = ("loan", "checking", "savings", "saving", "card", "certificate", "mortgage", "equity",
                  "ira", "retirement", "money-market", "insurance", "account", "heloc", "cash-management",
                  "credit-line", "lending", "deposit")
@@ -86,13 +92,13 @@ def page_type(url: str, title: str, blocks: List[Dict]) -> str:
     if not segs:
         return "home"
     if any(s in ("tag", "author", "category") for s in segs) or "category=" in u.query.lower() \
-            or segs[-1] in LISTING_LEAVES:
+            or segs[-1] in LISTING_LEAVES or _LISTING_LEAF.fullmatch(segs[-1]):
         return "listing"
     if any("calculator" in s for s in segs):
         return "calculator"
-    if any(s in ("newsroom", "news", "press", "press-releases") for s in segs):
+    if any(_NEWS_SEG.fullmatch(s) for s in segs):
         return "news"
-    if any(s in ("blog", "dupacodaily") for s in segs) or re.search(r"/(?:19|20)\d{2}/\d{2}/", path) \
+    if any(_BLOG_SEG.fullmatch(s) for s in segs) or re.search(r"/(?:19|20)\d{2}/\d{2}/", path) \
             or (len(segs) >= 3 and segs[-2] == "resources"):
         return "blog"
     if any(re.fullmatch(r"(?:[a-z]+-)?rates", s) for s in segs):

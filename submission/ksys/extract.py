@@ -23,7 +23,7 @@ from __future__ import annotations
 import re
 from typing import Dict, List, Optional, Tuple
 
-EXTRACT_VERSION = 4
+EXTRACT_VERSION = 5
 
 # ---- value parsing ------------------------------------------------------------------------
 _NUM = r"\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?"
@@ -200,6 +200,9 @@ def table_facts(block: Dict) -> List[Dict]:
                 "product_key": _norm_product(product), "label": label, "quals": quals, "metric": m,
                 "value": val, "num": v["num"], "unit": unit, "footnote": v["footnote"],
                 "column": header[col] if header else "", "quote": quote[:300],
+                # The section headings above the table name the product when the table has no
+                # caption and its rows are only terms ("60 Months" under "Auto Loans").
+                "context": " / ".join(block.get("path", [])[-2:])[:200],
             })
     return facts
 

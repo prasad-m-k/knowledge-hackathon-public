@@ -25,7 +25,7 @@ FAMILIES = [
 
 # Words that never distinguish one product from another.
 GENERIC_WORDS = {
-    "a", "an", "and", "the", "of", "for", "to", "on", "in", "with", "your", "our", "dupaco",
+    "a", "an", "and", "the", "of", "for", "to", "on", "in", "with", "your", "our",
     "account", "accounts", "rate", "rates", "loan", "loans", "program", "programs", "product", "products",
     "apr", "apy", "dividend", "annual", "percentage", "yield", "as", "low", "min", "earn", "open",
     "month", "months", "year", "years", "model", "term", "tier", "balance", "or", "less", "older",

@@ -16,10 +16,11 @@ import re
 from typing import Dict, List, Optional, Tuple
 
 from .history import key_str
-from .passages import capitalized_tokens
+from .passages import name_tokens_in
 from .question import Query, tokens_of
 from .taxonomy import GENERIC_WORDS
 from .resolve import METRIC_NAMES, Winner
+from .site import SiteProfile
 
 DEPOSIT_FAMILIES = {"certificate", "savings", "money_market", "checking", "ira", "hsa"}
 RATE_METRICS = ("apy", "apr", "rate")
@@ -49,7 +50,16 @@ ANSWER_TYPES = [
      re.compile(r"\(?\b\d{3}\)?[-. ]\d{3}[-. ]\d{4}\b")),
     (re.compile(r"\brouting\b", re.I), re.compile(r"\b\d{9}\b")),
 ]
-_URL = re.compile(r"\((https?://[^)\s]+)\)|(?<![(\w])(https?://[^\s)\]]+|\b[a-z0-9-]+\.dupaco\.com[^\s)\]]*)", re.I)
+_URL = re.compile(r"\((https?://[^)\s]+)\)|(?<![(\w])(https?://[^\s)\]]+)", re.I)
+_BARE_LINK_CACHE: Dict[str, "re.Pattern"] = {}
+
+
+def _bare_link_re(domain: str):
+    """Links written without a scheme on the site's own domain ("join.dupaco.com/apply")."""
+    if domain not in _BARE_LINK_CACHE:
+        _BARE_LINK_CACHE[domain] = re.compile(
+            r"(?<![(\w/.])\b(?:[a-z0-9-]+\.)+" + re.escape(domain) + r"[^\s)\]]*", re.I)
+    return _BARE_LINK_CACHE[domain]
 
 
 class Draft:
@@ -256,12 +266,12 @@ def answer_link(q: Query, view: Dict[Tuple, Winner], page_types: Dict[str, str])
     return Draft(text, [(u, pages[u].snapshot_id, None) for u in ranked[:2]], True)
 
 
-def answer_count(q: Query, view: Dict[Tuple, Winner]) -> Optional[Draft]:
+def answer_count(q: Query, view: Dict[Tuple, Winner], site: SiteProfile = SiteProfile()) -> Optional[Draft]:
     m = _COUNT_Q.search(q.text)
     if not m:
         return None
-    count_words = {"how", "many", "dupaco", "have", "doe", "there", "total", "operate", "branch", "location",
-                   "office", "employee", "member", "atm", "full", "service", "full-service"}
+    count_words = {"how", "many", "have", "doe", "there", "total", "operate", "branch", "location",
+                   "office", "employee", "member", "atm", "full", "service", "full-service"} | set(site.words)
     prefixes = {w[:5] for w in count_words}
     extra = [t for t in q.tokens if t not in count_words and t[:5] not in prefixes]
     if extra:                       # "how many employees used Volunteer Time Off" is not a size question
@@ -270,7 +280,7 @@ def answer_count(q: Query, view: Dict[Tuple, Winner]) -> Optional[Draft]:
     w = view.get(("org_count", (noun,), (None, None, None, ()), "count"))
     if not w:
         return None
-    return Draft(f"Dupaco has {w.value} {noun}.", [(w.url, w.snapshot_id, w.quote[:200])], True,
+    return Draft(f"{site.subject()} has {w.value} {noun}.", [(w.url, w.snapshot_id, w.quote[:200])], True,
                  f"Newest dated statement ({w.url}); older pages list other counts." if w.alternatives else None)
 
 
@@ -289,10 +299,13 @@ def _best_sentences(text: str, qtok: set, limit: int = 3) -> str:
     return " ".join(sents[i] for i in sorted(set(keep)))
 
 
-def _links(md: str) -> List[str]:
+def _links(md: str, domain: str = "") -> List[str]:
+    found = [(m.start(), m.group(1) or m.group(2) or "") for m in _URL.finditer(md)]
+    if domain:
+        found += [(m.start(), m.group(0)) for m in _bare_link_re(domain).finditer(md)]
     out = []
-    for m in _URL.finditer(md):
-        u = (m.group(1) or m.group(2) or "").rstrip(".,;")
+    for _, u in sorted(found):
+        u = u.rstrip(".,;")
         if u and u not in out and not u.endswith("#"):
             out.append(u)
     return out
@@ -302,7 +315,7 @@ def title_overlap(qtok: set, p) -> bool:
     return bool(qtok & set(tokens_of(p.title.split("|")[0] + " " + " ".join(p.path[:1]))))
 
 
-def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]:
+def answer_passages(q: Query, index, proper_nouns: List[str], site: SiteProfile = SiteProfile()) -> Optional[Draft]:
     if not q.tokens:
         return None
     # A name must be one the site itself writes capitalized; a common word that happens to
@@ -327,7 +340,8 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
     for score, p, _ in cands:
         ctx, md = index.context(p)
         ctx_tokens = set(tokens_of(ctx + " " + " ".join(p.path[-2:])))
-        ctx_names = capitalized_tokens(ctx + " " + " ".join(p.path[-2:]) + " " + p.title) if pn_tokens else set()
+        body_names = name_tokens_in(ctx, "", index.common_words) if pn_tokens else set()
+        ctx_names = (body_names | name_tokens_in("", " ".join(p.path[-2:]) + " " + p.title)) if pn_tokens else set()
         if want and all(v.search(ctx) for v in want) and p.page_type in ("page", "home"):
             if p.url not in want_pages:
                 want_pages.append(p.url)
@@ -340,7 +354,7 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
             continue
         cover = sum(index.idf.get(t, 0.0) for t in covered)
         title_hits = len(qtok & set(tokens_of(p.title + (" " + " ".join(p.path) if p.page_type == "page" and not pn_tokens else ""))))
-        pn_in_text = bool(pn_tokens) and all(t in capitalized_tokens(ctx) for t in pn_tokens)
+        pn_in_text = bool(pn_tokens) and all(t in body_names for t in pn_tokens)
         full = 1.25 if covered >= qtok else 1.0        # every question word is addressed
         final = cover * index._weight(p) * (1 + 0.3 * title_hits) * (1.5 if pn_in_text else 1.0) * full + 0.01 * score
         ranked.append((final, p, ctx, md))
@@ -376,7 +390,8 @@ def answer_passages(q: Query, index, proper_nouns: List[str]) -> Optional[Draft]
         if q.is_rate_q and re.search(r"\brates?\b|\bapr\b|\bapy\b", q.text, re.I) and "%" not in body:
             return refusal("the website does not publish this rate")
         if q.wants_link:
-            links = [u for u in _links(md) if any(t in u.lower() for t in qtok)] or _links(md)[:2]
+            found = _links(md, site.domain)
+            links = [u for u in found if any(t in u.lower() for t in qtok)] or found[:2]
             # The page itself is often the answer ("the branch and ATM locator" is /contact).
             page_url = p.url.split("#")[0]
             links = [page_url] + [u for u in links if u.rstrip("/") != page_url.rstrip("/")]

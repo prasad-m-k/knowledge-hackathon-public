@@ -20,6 +20,7 @@ from contract import Answer, Conflict, Snapshot, Source  # noqa: E402
 from ksys.answer import answer_count, answer_facts, answer_link, answer_passages, refusal  # noqa: E402
 from ksys.history import History  # noqa: E402
 from ksys.ingest import Ingestor  # noqa: E402
+from ksys import llm  # noqa: E402
 from ksys.passages import PassageIndex  # noqa: E402
 from ksys.question import parse  # noqa: E402
 from ksys.resolve import build_conflicts, resolve_snapshot  # noqa: E402
@@ -30,7 +31,7 @@ _PROPER = re.compile(r"(?<![.?!]\s)(?<!^)\b([A-Z][a-z]+(?:\s+[A-Z][a-z]+)*)")
 # Capitalized words in a question that are not names to look up. A name the site never
 # mentions leads to an honest refusal, so these words must never trigger that check.
 _QUESTION_WORDS = ("I", "What", "How", "Who", "When", "Where", "Can", "Do", "Does", "Is", "Are")
-_SITE_TERMS = ("Dupaco", "Visa", "APY", "APR", "CD", "IRA")
+_SITE_TERMS = ("Visa", "APY", "APR", "CD", "IRA")
 _STATES = ("Iowa", "Illinois", "Wisconsin")
 _MONTHS = ("January", "February", "March", "April", "May", "June",
            "July", "August", "September", "October", "November", "December")
@@ -38,12 +39,13 @@ _WEEKDAYS = ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
 _COMMON_CAPS = frozenset(_QUESTION_WORDS + _SITE_TERMS + _STATES + _MONTHS + _WEEKDAYS)
 
 
-def _names_in(question: str) -> List[str]:
-    """Names in the question, with common capitalized words dropped word by word, so
-    "Dupaco Visa" asks about nothing extra and "Dupaco Shared Branch" keeps "Shared Branch"."""
+def _names_in(question: str, org_words=frozenset()) -> List[str]:
+    """Names in the question, with common capitalized words and the organisation's own name
+    dropped word by word, so "Dupaco Visa" asks about nothing extra and "Dupaco Shared Branch"
+    keeps "Shared Branch"."""
     names = []
     for m in _PROPER.finditer(question):
-        words = [w for w in m.group(1).split() if w not in _COMMON_CAPS]
+        words = [w for w in m.group(1).split() if w not in _COMMON_CAPS and w.lower() not in org_words]
         if words:
             names.append(" ".join(words))
     return names
@@ -123,6 +125,8 @@ class KnowledgeSystem:
                 "resolved_keys_latest": len(self.views.get(latest_sid, {})) if latest_sid else 0,
                 "cached_answers": len(self._cache),
                 "store_backend": getattr(self.ingestor.store, "backend", "unknown"),
+                "site": {"name": self.ingestor.profile.name, "domain": self.ingestor.profile.domain},
+                "llm_extraction": dict(llm.STATS, enabled=llm.enabled()),
             }
 
     def close(self) -> None:
@@ -145,7 +149,7 @@ class KnowledgeSystem:
             d = refusal("no snapshots ingested")
         else:
             view = self.views[sid]
-            d = answer_count(q, view)
+            d = answer_count(q, view, self.ingestor.profile)
             if d is None and q.wants_link and q.family and q.is_rate_q:
                 d = answer_link(q, view, self.page_types[sid])
             if d is None and q.family and q.is_rate_q:
@@ -153,7 +157,8 @@ class KnowledgeSystem:
                 if d is None:
                     d = refusal("no published rate matches this product and term")
             if d is None:
-                d = answer_passages(q, self.indexes[sid], _names_in(question))
+                site = self.ingestor.profile
+                d = answer_passages(q, self.indexes[sid], _names_in(question, site.words), site)
             if d is None:
                 d = refusal("no page answers this question")
         sources = [Source(url=u, snapshot_id=s or sid, quote=qt) for u, s, qt in d.sources]

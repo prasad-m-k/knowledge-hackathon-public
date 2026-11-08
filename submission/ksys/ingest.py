@@ -16,6 +16,8 @@ from .boilerplate import clean_snapshot
 from .classify import PageMeta, classify_page
 from .extract import EXTRACT_VERSION, extract_page
 from .segment import SEGMENT_VERSION, segment_page
+from . import llm
+from .site import SiteProfile, profile_from_pages, register
 from .store import open_store
 
 logger = logging.getLogger("ksys.ingest")
@@ -44,6 +46,7 @@ class Ingestor:
     def __init__(self, store=None) -> None:
         self.store = store if store is not None else open_store()
         self.snapshots: List[SnapshotDoc] = []
+        self.profile = SiteProfile()
 
     def ingest(self, snapshot) -> SnapshotDoc:
         if snapshot is None:
@@ -52,6 +55,9 @@ class Ingestor:
         taken_on = str(getattr(snapshot, "taken_on", "") or "")
         raw_pages = list(getattr(snapshot, "pages", []) or [])
         t0 = time.monotonic()
+        # Learn the organisation's name and domain before any text is tokenised.
+        self.profile = profile_from_pages(raw_pages)
+        register(self.profile)
         cleaned = clean_snapshot(raw_pages)
         pages: Dict[str, PageDoc] = {}
         hits = misses = fact_count = page_errors = 0
@@ -71,6 +77,9 @@ class Ingestor:
                 if facts is None:
                     facts = extract_page(blocks, c.title)
                     self.store.put("facts", fkey, facts)
+                # Optional and off by default: grounded LLM rates for prose-only rate pages on an
+                # allow-listed domain (ksys/llm.py). Cached separately from rule-based facts.
+                facts = llm.augment(url, c.title, c.text, blocks, facts, c.content_hash)
                 fact_count += len(facts)
                 pages[url] = PageDoc(url, c.title, c.fetched_at, c.content_hash, blocks,
                                      classify_page(url, c.title, blocks), facts)

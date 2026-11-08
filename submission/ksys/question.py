@@ -14,6 +14,7 @@ from typing import Dict, List, Optional, Tuple
 
 from .dates import MONTH_YEAR, end_of_month, find_dates, month_num
 from .history import family_of, name_tokens
+from .site import ORG_WORDS
 from .taxonomy import IDENTITY_FLAGS
 
 WORD_NUM = {"one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8, "nine": 9,
@@ -41,8 +42,8 @@ _RATEY = re.compile(r"\b(rates?|apys?|aprs?|yields?|dividends?|interest|percent)
 FLAG_WORDS = sorted(IDENTITY_FLAGS | {"standard", "intro"}, key=len, reverse=True)
 _FLAG_RE = re.compile(r"\b(" + "|".join(re.escape(f) for f in FLAG_WORDS) + r")\b", re.I)
 STOP = {"what", "whats", "is", "the", "a", "an", "of", "for", "on", "in", "to", "do", "does", "you", "your", "i",
-        "me", "my", "can", "are", "and", "or", "with", "how", "much", "many", "get", "tell", "please", "dupaco",
-        "dupacos", "current", "currently", "now", "today", "right", "rate", "rates", "apy", "apr", "interest",
+        "me", "my", "can", "are", "and", "or", "with", "how", "much", "many", "get", "tell", "please",
+        "current", "currently", "now", "today", "right", "rate", "rates", "apy", "apr", "interest",
         "dividend", "s", "it", "at", "as", "be", "have", "has", "any", "there", "which", "who", "when", "where",
         "would", "like", "know", "give", "provide", "about", "if", "this", "that", "will", "earn", "pay", "offer",
         "want", "need", "should", "use", "see", "was", "were", "still", "open", "vehicle", "model", "year",
@@ -100,7 +101,7 @@ def tokens_of(text: str) -> List[str]:
             t = t[:-2]
         if len(t) > 3 and t.endswith("s") and not t.endswith("ss"):
             t = t[:-1]
-        if t and t not in STOP:
+        if t and t not in STOP and t not in ORG_WORDS:
             out.append(t)
     return out
 

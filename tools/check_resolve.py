@@ -55,7 +55,7 @@ def main() -> None:
         print(f"  {c['topic'][:80]}\n     values={c['values']} -> {c['resolution']}\n     why: {c['reason'][:150]}")
     gold = snap_root.parent / "conflicts_gold.json"
     if not gold.exists():
-        gold = ROOT / "eval" / "conflicts_gold.json"
+        gold = ROOT / "tests" / "fixtures" / "conflicts_gold_public.json"
     if gold.exists():
         sub = [Conflict(c["topic"], c["values"], [Source(**s) for s in c["sources"]], c["resolution"], c["reason"])
                for c in conflicts]

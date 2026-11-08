@@ -25,6 +25,7 @@ from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 from urllib.parse import urlparse
 
+from .site import ORG_WORDS
 from .taxonomy import FAMILIES, GENERIC_WORDS, IDENTITY_FLAGS
 
 KEY_VERSION = 1
@@ -45,7 +46,7 @@ def family_of(*texts: str) -> Optional[str]:
 
 def name_tokens(text: str) -> Tuple[str, ...]:
     toks = {t.replace("’", "'").strip("'") for t in _TOKEN.findall((text or "").lower())}
-    return tuple(sorted(t for t in toks if t and t not in GENERIC_WORDS and t not in _FAMILY_WORDS
+    return tuple(sorted(t for t in toks if t and t not in GENERIC_WORDS and t not in ORG_WORDS and t not in _FAMILY_WORDS
                         and t not in _FLAG_WORDS and len(t) > 1))
 
 

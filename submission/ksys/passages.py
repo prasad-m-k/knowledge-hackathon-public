@@ -6,6 +6,7 @@ blog post that happens to use the same words. Built once per snapshot during ing
 """
 from __future__ import annotations
 
+import functools
 import math
 import re
 from collections import Counter, defaultdict
@@ -22,17 +23,44 @@ MAX_BLOCK_CHARS = 1500
 CHUNK_CHARS = 600
 
 
-# A capitalized word ("Discover", "MasterCard", "Hy-Vee", "DUBUQUE"). Names in a question are
-# matched in this form, so the verb "discover" in a blog post never stands in for the brand.
+# A capitalized word ("Discover", "MasterCard", "DUBUQUE"). A hyphenated name gives one match per
+# part ("Hy-Vee" gives "Hy" and "Vee"), the same split the question side makes. Names in a
+# question are matched in this form, so the verb "discover" never stands in for the brand.
 _CAP_WORD = re.compile(r"\b[A-Z][A-Za-z]+")
 # The same, but not at the start of a line, sentence or list item, where any word is capitalized.
 _MID_CAP_WORD = re.compile(r"(?<!^)(?<![.!?:]\s)(?<![-*+]\s)\b[A-Z][A-Za-z]+", re.M)
+# A word written in lowercase ("discover", "habitat").
+_LOWER_WORD = re.compile(r"\b[a-z][a-z']+\b")
 
 
 def capitalized_tokens(text: str, mid_sentence_only: bool = False) -> set:
     """Normalised tokens of the capitalized words in `text` (same normalisation as tokens_of)."""
     words = (_MID_CAP_WORD if mid_sentence_only else _CAP_WORD).findall(text)
     return set(tokens_of(" ".join(words)))
+
+
+def lowercase_tokens(text: str) -> set:
+    """Normalised tokens of the words `text` writes in lowercase: ordinary words, not names."""
+    return set(tokens_of(" ".join(_LOWER_WORD.findall(text))))
+
+
+def name_tokens_in(body: str, headings: str = "", common: frozenset = frozenset()) -> set:
+    """The names a piece of the site uses. One rule, used for the site-wide name list, the
+    passage filter and the ranking bonus:
+    - a capital in the middle of a sentence is a name;
+    - every capital in headings and titles is a name (the site names its own things there);
+    - a capital at the start of a sentence or list item is a name only if the site never writes
+      the word in lowercase (`common`): "Habitat for Humanity" opening a list item counts,
+      "Discover how to save" does not, because the site also writes "discover"."""
+    return _body_names(body, common) | (capitalized_tokens(headings) if headings else set())
+
+
+@functools.lru_cache(maxsize=8192)
+def _body_names(body: str, common: frozenset) -> frozenset:
+    # Cached: the same passage contexts come up again and again across questions.
+    mid = capitalized_tokens(body, mid_sentence_only=True)
+    starts = capitalized_tokens(body) - mid
+    return frozenset(mid | (starts - common))
 
 
 def _chunks(text: str) -> List[str]:
@@ -69,6 +97,10 @@ class PassageIndex:
         self.by_url: Dict[str, List[int]] = defaultdict(list)
         # Words the site writes capitalized mid-sentence: the names it actually uses.
         self.name_vocab: set = set()
+        # Words the site writes in lowercase somewhere: a capital at a sentence start is not
+        # enough to make one of these a name.
+        self.common_words: set = set()
+        pending = []                      # (body, headings) until common_words is complete
         lengths: List[int] = []
         for url in sorted(snapshot_doc.pages):
             p = snapshot_doc.pages[url]
@@ -96,12 +128,14 @@ class PassageIndex:
                     self.passages.append(Passage(url, p.title, p.meta.page_type, p.meta.authority,
                                                  (b["i"], chunk_no), b["path"], chunk, md, p.meta.published or ""))
                     lengths.append(len(doc_tokens))
-                    # Body text counts only mid-sentence capitals; headings and titles are where
-                    # the site names its own products and programs, so every capital there counts.
-                    self.name_vocab |= capitalized_tokens(chunk, mid_sentence_only=True)
-                    self.name_vocab |= capitalized_tokens(" ".join(b["path"]) + " " + p.title)
+                    self.common_words |= lowercase_tokens(chunk)
+                    pending.append((chunk, " ".join(b["path"]) + " " + p.title))
                     for t, c in Counter(doc_tokens).items():
                         self.postings[t].append((i, c))
+        common = frozenset(self.common_words)
+        for body, headings in pending:
+            self.name_vocab |= name_tokens_in(body, headings, common)
+        self.common_words = common
         self.n = len(self.passages)
         self.avgdl = (sum(lengths) / self.n) if self.n else 1.0
         self.lengths = lengths

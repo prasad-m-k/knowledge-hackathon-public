@@ -8,7 +8,7 @@ Prasad MK
 
 ## How it works
 
-The system runs entirely on the Python standard library and needs no API keys, no network access and no extra packages (`requirements.txt` is empty). All heavy work happens in `ingest()`: each snapshot is cleaned, split into blocks, classified and turned into facts, and the winning value for every fact is computed per snapshot. `answer()` only reads in-memory structures, so answers take a few milliseconds and the same question always gets the same answer.
+The system runs entirely on the Python standard library and needs no API keys, no network access and no extra packages (`requirements.txt` is empty). An optional LLM extraction step exists (see below); it is off unless explicitly switched on, and the graded run never uses it. All heavy work happens in `ingest()`: each snapshot is cleaned, split into blocks, classified and turned into facts, and the winning value for every fact is computed per snapshot. `answer()` only reads in-memory structures, so answers take a few milliseconds and the same question always gets the same answer.
 
 Ingest runs in six stages (code in `ksys/`):
 
@@ -37,13 +37,34 @@ The system says "I don't know" (`confident=False`, no numbers) when the question
 
 ## Configuration and production readiness
 
-None is needed. Optionally, a SQLite cache of extracted pages (using WAL mode for concurrency) and structured logging (`ksys.*` loggers, overridable via `KSYS_LOG_LEVEL`) can be enabled by copying `ksys.config.example.json` to `ksys.config.json`; without that file everything stays in memory and nothing is written to disk. `KnowledgeSystem` is thread-safe (`RLock`-guarded state and cache), idempotent on duplicate snapshot ingestion, and exposes `health()` and a CLI (`python submission/solution.py --health`) for operational inspection. Design decisions are logged in `DECISIONS.md` at the repository root.
+None is needed. Optionally, a SQLite cache of extracted pages (using WAL mode for concurrency) and structured logging (`ksys.*` loggers, overridable via `KSYS_LOG_LEVEL`) can be enabled by copying `ksys.config.example.json` to `ksys.config.json`; without that file everything stays in memory and nothing is written to disk. State and the answer cache are guarded by a lock (the harness itself calls `answer()` from one thread), re-ingesting the newest snapshot does not duplicate observations, and `health()` plus a CLI (`python submission/solution.py --health`) show what was ingested and which site was detected. Design decisions are logged in `DECISIONS.md` at the repository root.
 
 ## Running and testing it
 
 The supplied website snapshots are not in this repository. Copy the five zips from the hackathon kit into `snapshots_zip/` (see `snapshots_zip/README.md`), then run:
 
-- Public evaluation with five-snapshot conflict gold annotations: `python harness/run_eval.py --submission submission --eval eval/public_eval.jsonl --conflicts-gold eval/conflicts_gold.json`
-- Unit and integration test suite (stdlib `unittest`): `python -m unittest discover -s tests -v`
+- Public evaluation: `python harness/run_eval.py --submission submission --eval eval/public_eval.jsonl`
+- Public evaluation with a conflict check: add `--conflicts-gold tests/fixtures/conflicts_gold_public.json`
+- Tests (stdlib `unittest`): `python -m unittest discover -s tests -v`
 
-The scorer unpacks the snapshot zips on the first run. No API keys are needed.
+The scorer unpacks the snapshot zips on the first run. Tests that need the real snapshots skip themselves when the zips are missing; the rest run anywhere. No API keys are needed.
+
+## How it is validated
+
+The kit has no conflict gold for the real snapshots, so `tests/fixtures/conflicts_gold_public.json` lists the 8 contradictions the organizers label in the public questions (a current value in `must_include`, a stale one in `must_not_include`), each confirmed in the raw pages: the 30-year mortgage, 60 and 84-month auto rates, branch count, Forbes ranking, checking rate, top savings APY and the 10-month jumbo special. Against it the conflict list recovers 7 of 8 with the right winner for 5 of 8. The miss is the Forbes ranking (text facts are not compared as conflicts). Two winners are lost because folding tiers into one entry per product and term lets the scorer pair a gold item with a neighbouring term's entry (D-019). Precision against this list is 0.19, which mostly says that 8 labelled contradictions are a small sample of the 36 reported. `tests/fixtures/conflicts_baseline.json` is a snapshot of the system's own conflict list, used only to flag unintended changes; it is not ground truth.
+
+"As of" answers are tested against timelines read by hand from each crawl's raw rate pages: the 10-month jumbo special APY (3.90% then 4.00%), the 30-year $100,000 purchase rate (5.875%, 6.250%, 6.125%, 6.375%, 7.13%) and the 48-month auto APR across the model-year rename (4.99% then 5.19%), plus date edge cases on synthetic crawls (before the first crawl, between crawls, after the last, month-only and "today" dates in the question).
+
+## Beyond this site
+
+Nothing in the code names Dupaco. The organisation's name and domain are read from the crawl (the suffix most page titles share, the host most pages live on) and used wherever the code would otherwise name one credit union. `tests/test_second_site.py` runs the system on a made-up second credit union whose pages differ in the ways that broke earlier versions: tables without a caption line, a news folder named after the organisation, links written without a scheme. One limit remains by design: counts go to the newest dated statement, so a current figure that only appears on an undated page loses to an older dated one. Trusting undated pages instead would make Dupaco's correct 22 branches lose to an old staff biography on `/about` that says 18.
+
+## Optional LLM extraction (off by default)
+
+Rules read tables well and prose less well. When several products share one sentence ("Holiday Club Savings earns 1.25% APY, Youth Savings earns 2.00% APY, and a Health Savings Account earns 0.50% APY"), when values sit on their own lines under labels, or when a range sits next to an intro rate, the rules can credit a value to the wrong product. `ksys/llm.py` can ask Gemini to extract the rates from such pages at ingest. It runs only on pages that state rates in text but have no rate table, and only when all three are set: `KSYS_LLM=gemini`, `GOOGLE_API_KEY`, and `KSYS_LLM_ALLOW_DOMAINS` listing the site's domain. With no allow list nothing is sent, whatever keys are in the environment.
+
+The model's output is not trusted as such. A value is kept only if it appears in the page and inside the quoted sentence, and the quote itself appears in the page; anything else is dropped. Kept values rank like prose, below any table on an authoritative page, and replace that page's rule-based prose rates. Calls use temperature 0 and a JSON schema; responses are cached in `submission/cache/llm/` (gitignored) by model, prompt version, URL and page content, so a rerun makes no calls and gives identical facts. Network or parsing failures are logged and the page keeps its rule-based facts. `answer()` never calls a model.
+
+How it was tested: the supplied snapshots were never sent to an API. Testing used a free-tier Gemini key, and free-tier prompts may be used by Google, which the kit's "shared for this event only" terms rule out for the credit union's pages. So the live test runs on `tests/fixtures/hard_layouts.py`, a made-up credit union with those three layouts and seven questions with known answers. `tools/check_llm.py` (needs `GOOGLE_API_KEY`) reports, for `gemini-3.5-flash`: rules alone 1 of 7, two of them confident wrong answers (another product's rate, the balance-transfer rate as the purchase APR); with the model 7 of 7, 7 values kept and none rejected; two fresh runs gave identical facts; a cached rerun made no calls and matched. `tests/test_llm_extract.py` covers the guards, the grounding check, the cache and API failure offline with a stand-in for the model, so it needs no key. On the real snapshots with the step switched on and only the made-up domain allowed, no page was offered to the model, and the public evaluation is unchanged at 0.969.
+
+What this does not show: how much it would help on the real snapshots, which would need a paid key (or an equivalent agreement) before any page is sent. The model defaults to `gemini-3.5-flash`; `KSYS_LLM_MODEL` overrides it.

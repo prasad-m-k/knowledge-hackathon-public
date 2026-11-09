@@ -17,9 +17,10 @@ whole site as of that day). Candidates are ranked by:
 
 Conflicts: a key is contradicted when more than one value was ever shown for it (within one
 crawl or across crawls). For rates, table values compete when the key has any (prose
-values otherwise). Rate, APR and APY keys of one product slot are folded into one conflict
-and amount tiers and model-year buckets of one product and term are folded into one entry, so the
-list stays precise. Only rate-like metrics and organisation counts are reported.
+values otherwise). Rate, APR and APY keys of one product slot are folded into one conflict, and
+each product and term gives one entry: the base tier that holds a contradiction (D-026). Entries
+that repeat a more general entry's values and winner are merged. Only rate-like metrics and
+organisation counts are reported here; repeated-recognition claims come from ksys/ordinals.py.
 """
 from __future__ import annotations
 
@@ -157,66 +158,114 @@ def _reason(win: Winner, loser_obs: List[Observation], latest_id: str) -> str:
     return "; ".join(why)
 
 
+def _tier_order(slot: Tuple) -> Tuple:
+    """Base tier first: newest model-year bucket, then the lowest balance or loan-amount tier."""
+    _term, rank, amount, _flags = slot[2]
+    lo = float(amount.partition("-")[0]) if amount else -1.0
+    return (rank is None, rank or 0, lo, key_str(slot + ("",)))
+
+
+def _slot_conflict(keys: Dict[Tuple, List[Observation]], latest: Dict[Tuple, Winner],
+                   group_has_table: bool, slot: Tuple):
+    """Winners and competing values of one tier (all metrics of that tier), or None if no contradiction."""
+    values: Dict[str, List[Observation]] = defaultdict(list)
+    winners: List[Winner] = []
+    for key in sorted(keys, key=lambda k: key_str(k)):
+        metric = key[3]
+        if metric != "count" and group_has_table and not any(o.source == "table" for o in keys[key]):
+            continue
+        # Rates: only table values compete (stale calculators and landing pages keep their
+        # tables; stray percentages in blog prose are not contradictions of a rate table).
+        obs = [o for o in keys[key] if o.page_type != "listing" and not (metric in RATE_METRICS and o.value == "100%")]
+        if metric != "count" and any(o.source == "table" for o in obs):
+            obs = [o for o in obs if o.source == "table"]
+        if metric == "count" and slot[1] not in COUNT_CONFLICT_NOUNS:
+            continue
+        if len({o.value for o in obs}) < 2:
+            continue
+        w = latest.get(key)
+        if w is None:
+            continue
+        winners.append(w)
+        for o in obs:
+            values[o.value].append(o)
+    if not winners:
+        return None
+    win_values = {w.value for w in winners}
+    # A value that only appears in the winner's own sentence describes it ("2.90% intro APR ...
+    # after that 12.50%-19.50%"); it does not contradict it.
+    win_quotes = {w.quote for w in winners}
+    for v in list(values):
+        if v not in win_values and all(o.quote in win_quotes for o in values[v]):
+            del values[v]
+    losers = [o for v, os in values.items() if v not in win_values for o in os]
+    return (winners, values, losers) if losers else None
+
+
+def _specificity(c: Dict) -> Tuple:
+    """Fewer qualifiers = more general entry (personal before business, certificate before IRA)."""
+    fam, name, sig, _ = c["_key"]
+    return (fam == "ira", "business" in sig[3], len(sig[3]) + len(name), c["topic"])
+
+
+def _merge_duplicates(entries: List[Dict]) -> List[Dict]:
+    """Drop an entry whose resolution equals a more general entry's and whose values it already lists.
+
+    Business and personal pages, and IRA and regular certificates, often print one rate table; the
+    same contradiction should be reported once.
+    """
+    kept: List[Dict] = []
+    for c in sorted(entries, key=_specificity):
+        if any(k["resolution"] == c["resolution"] and set(c["values"]) <= set(k["values"]) for k in kept):
+            continue
+        kept.append(c)
+    order = {id(c): i for i, c in enumerate(entries)}
+    return sorted(kept, key=lambda c: order[id(c)])
+
+
 def build_conflicts(hist: History, latest: Dict[Tuple, Winner]) -> List[Dict]:
-    """One entry per product slot whose rate-like values (or counts) disagree anywhere in history."""
+    """One entry per product and term whose rate-like values (or counts) disagree anywhere in history.
+
+    Amount tiers and model-year buckets of one product and term are not separate entries: the entry
+    reports the base tier that holds a contradiction (newest model years, lowest balance or loan
+    amount), with only that tier's values and winner. Listing every tier's values in one entry let
+    the scorer pair it with another product's contradiction that shares one number.
+    """
     latest_id = hist.snapshot_order[-1][0] if hist.snapshot_order else ""
     all_obs = hist.by_key()
-    # One entry per product and term: amount tiers and model-year buckets of the same product are
-    # folded together (their values and winners are all listed), which keeps the list precise.
-    groups: Dict[Tuple, Dict[Tuple, List[Observation]]] = defaultdict(dict)
+    groups: Dict[Tuple, Dict[Tuple, Dict[Tuple, List[Observation]]]] = defaultdict(lambda: defaultdict(dict))
     for key, obs in all_obs.items():
         if key[3] in CONFLICT_METRICS:
-            groups[coarse_slot(key)][key] = obs
+            groups[coarse_slot(key)][slot_of(key)][key] = obs
     out: List[Dict] = []
-    for slot in sorted(groups, key=lambda s: key_str(s + ("",))):
-        values: Dict[str, List[Observation]] = defaultdict(list)
-        winners: List[Winner] = []
-        group_has_table = any(o.source == "table" for obs in groups[slot].values() for o in obs)
-        for key in sorted(groups[slot], key=lambda k: key_str(k)):
-            metric = key[3]
-            if metric != "count" and group_has_table and not any(o.source == "table" for o in groups[slot][key]):
-                continue
-            # Rates: only table values compete (stale calculators and landing pages keep their
-            # tables; stray percentages in blog prose are not contradictions of a rate table).
-            obs = [o for o in groups[slot][key] if o.page_type != "listing" and not (metric in RATE_METRICS and o.value == "100%")]
-            if metric != "count" and any(o.source == "table" for o in obs):
-                obs = [o for o in obs if o.source == "table"]
-            if metric == "count" and slot[1] not in COUNT_CONFLICT_NOUNS:
-                continue
-            if len({o.value for o in obs}) < 2:
-                continue
-            w = latest.get(key)
-            if w is None:
-                continue
-            winners.append(w)
-            for o in obs:
-                values[o.value].append(o)
-        if not winners:
+    for coarse in sorted(groups, key=lambda s: key_str(s + ("",))):
+        tiers = groups[coarse]
+        group_has_table = any(o.source == "table" for keys in tiers.values() for obs in keys.values() for o in obs)
+        found = None
+        for slot in sorted(tiers, key=_tier_order):
+            found = _slot_conflict(tiers[slot], latest, group_has_table, slot)
+            if found:
+                break
+        if not found:
             continue
-        win_values = {w.value for w in winners}
-        # A value that only appears in the winner's own sentence describes it ("2.90% intro APR ...
-        # after that 12.50%-19.50%"); it does not contradict it.
-        win_quotes = {w.quote for w in winners}
-        for v in list(values):
-            if v not in win_values and all(o.quote in win_quotes for o in values[v]):
-                del values[v]
-        losers = [o for v, os in values.items() if v not in win_values for o in os]
-        if not losers:
-            continue
+        winners, values, losers = found
         main = max(winners, key=lambda w: (w.key[3] == "apy", w.key[3] == "apr", w.key[3]))
-        tiers = len({w.key[:3] for w in winners}) > 1
         sources = []
         for v in sorted(values):
             o = max(values[v], key=lambda o: (o.snapshot_id, o.authority, o.url))
             sources.append({"url": o.url, "snapshot_id": o.snapshot_id, "quote": f"{v}: {o.quote[:160]}"})
         out.append({
-            "topic": topic_of(slot, [w.key[3] for w in winners], "" if tiers else main.label),
+            "topic": topic_of(main.key[:3], [w.key[3] for w in winners], main.label),
             "values": sorted(values),
             "sources": sources,
             "resolution": " / ".join(dict.fromkeys(
-                f"{w.value} {METRIC_NAMES.get(w.key[3], w.key[3])}" + (f" ({_tier_label(w)})" if tiers else "")
-                for w in winners)),
+                f"{w.value} {METRIC_NAMES.get(w.key[3], w.key[3])}"
+                for w in sorted(winners, key=lambda w: w is not main))),
             "reason": _reason(main, losers, latest_id),
-            "slot": key_str(slot + ("",)).rstrip("|"),
+            "slot": key_str(coarse + ("",)).rstrip("|"),
+            "_key": main.key,
         })
+    out = _merge_duplicates(out)
+    for c in out:
+        del c["_key"]
     return out

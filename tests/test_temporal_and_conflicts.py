@@ -143,8 +143,33 @@ class TestRealSnapshots(unittest.TestCase):
         # public questions, each confirmed in the raw pages. Floors guard against regressions.
         gold = json.loads((FIXTURES / "conflicts_gold_public.json").read_text(encoding="utf-8"))
         s = score_conflicts(gold, self.ks.conflicts())
-        self.assertGreaterEqual(s["recall"], 0.875, s)
-        self.assertGreaterEqual(s["resolution_accuracy"], 0.625, s)
+        self.assertGreaterEqual(s["recall"], 1.0, s)
+        self.assertGreaterEqual(s["resolution_accuracy"], 0.875, s)
+        self.assertGreaterEqual(s["precision"], 0.32, s)
+
+    def test_conflicts_report_one_tier_per_product_and_term(self) -> None:
+        # D-026: the 60-month auto entry holds only the newest model-year tier (2024-27 row on
+        # /rates and the auto loan page; 5.34% on the vehicle-affordability calculator), not the
+        # 5.44%-6.34% values of the older model-year rows.
+        auto60 = [c for c in self.ks.conflicts() if c.topic.startswith("60-month auto")]
+        self.assertEqual(len(auto60), 1, [c.topic for c in self.ks.conflicts()])
+        self.assertEqual(sorted(auto60[0].values), ["5.19%", "5.34%", "5.39%"])
+        self.assertEqual(auto60[0].resolution, "5.39% APR")
+
+    def test_business_and_ira_copies_of_a_rate_table_are_reported_once(self) -> None:
+        topics = [c.topic for c in self.ks.conflicts()]
+        tenjumbo = [t for t in topics if t.startswith("10-month") and "jumbo" in t]
+        self.assertEqual(len(tenjumbo), 1, tenjumbo)
+        self.assertNotIn("business", tenjumbo[0])
+        self.assertNotIn("IRA", tenjumbo[0])
+
+    def test_repeated_recognition_resolves_to_newest_release(self) -> None:
+        # /newsroom/forbes-ranks-dupaco-as-a-top-credit-union-in-america-2 (2023-07-18): "fourth
+        # time"; ...-3 (2024-06-18): "fifth time".
+        forbes = [c for c in self.ks.conflicts() if "Forbes" in c.topic]
+        self.assertEqual(len(forbes), 1, [c.topic for c in self.ks.conflicts()])
+        self.assertEqual(forbes[0].values, ["fourth", "fifth"])
+        self.assertEqual(forbes[0].resolution, "fifth")
 
     def test_conflict_list_matches_recorded_baseline(self) -> None:
         # A regression snapshot of this system's own output, not ground truth: it fails when the

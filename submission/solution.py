@@ -23,6 +23,7 @@ from ksys.ingest import Ingestor  # noqa: E402
 from ksys import llm  # noqa: E402
 from ksys.passages import PassageIndex  # noqa: E402
 from ksys.question import parse  # noqa: E402
+from ksys.ordinals import build_ordinal_conflicts  # noqa: E402
 from ksys.resolve import build_conflicts, resolve_snapshot  # noqa: E402
 
 logger = logging.getLogger("ksys.solution")
@@ -107,6 +108,8 @@ class KnowledgeSystem:
             if self._conflicts is None:
                 latest = self.order[-1][0] if self.order else None
                 raw = build_conflicts(self.history, self.views.get(latest, {})) if latest else []
+                if latest:
+                    raw += build_ordinal_conflicts(self._site, self.ingestor.profile.words, latest)
                 self._conflicts = [Conflict(c["topic"], c["values"], [Source(**s) for s in c["sources"]],
                                             c["resolution"], c["reason"]) for c in raw]
             return list(self._conflicts)

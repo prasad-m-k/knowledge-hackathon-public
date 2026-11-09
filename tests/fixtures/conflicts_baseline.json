@@ -1,7 +1,7 @@
 [
   {
     "id": "dup-c01",
-    "topic": "48-month auto loan APR",
+    "topic": "48-month auto loan newest model years [2024-27 Model Year | 48 Months] APR",
     "topic_keywords": [
       "48-month",
       "auto",
@@ -9,16 +9,13 @@
     ],
     "values": [
       "4.99%",
-      "5.19%",
-      "8.39%",
-      "8.54%",
-      "8.59%"
+      "5.19%"
     ],
     "correct_value": "5.19%"
   },
   {
     "id": "dup-c02",
-    "topic": "60-month auto loan APR",
+    "topic": "60-month auto loan newest model years [2024-27 Model Year | 60 Months] APR",
     "topic_keywords": [
       "60-month",
       "auto",
@@ -27,19 +24,13 @@
     "values": [
       "5.19%",
       "5.34%",
-      "5.39%",
-      "5.44%",
-      "5.59%",
-      "5.64%",
-      "6.14%",
-      "6.29%",
-      "6.34%"
+      "5.39%"
     ],
     "correct_value": "5.39%"
   },
   {
     "id": "dup-c03",
-    "topic": "72-month auto loan APR",
+    "topic": "72-month auto loan newest model years [2024-27 Model Year | 72 Months] APR",
     "topic_keywords": [
       "72-month",
       "auto",
@@ -48,19 +39,13 @@
     "values": [
       "5.29%",
       "5.44%",
-      "5.49%",
-      "5.59%",
-      "5.74%",
-      "5.79%",
-      "6.29%",
-      "6.44%",
-      "6.49%"
+      "5.49%"
     ],
     "correct_value": "5.49%"
   },
   {
     "id": "dup-c04",
-    "topic": "84-month auto loan APR",
+    "topic": "84-month auto loan newest model years [2024-27 Model Year | 84 Months] APR",
     "topic_keywords": [
       "84-month",
       "auto",
@@ -69,19 +54,15 @@
     "values": [
       "5.39%",
       "5.54%",
-      "5.59%",
-      "5.84%",
-      "5.99%",
-      "6.04%"
+      "5.59%"
     ],
     "correct_value": "5.59%"
   },
   {
     "id": "dup-c05",
-    "topic": "10-month business jumbo special certificate [10 Month Fixed Jumbo Certificate Special] APY/rate",
+    "topic": "10-month jumbo special certificate [10 Month Fixed Jumbo Certificate Special] APY/rate",
     "topic_keywords": [
       "10-month",
-      "business",
       "jumbo",
       "special"
     ],
@@ -95,10 +76,9 @@
   },
   {
     "id": "dup-c06",
-    "topic": "10-month business special certificate [10 Month Fixed Certificate Special] APY/rate",
+    "topic": "10-month special certificate [10 Month Fixed Certificate Special] APY/rate",
     "topic_keywords": [
       "10-month",
-      "business",
       "special",
       "certificate"
     ],
@@ -112,44 +92,9 @@
   },
   {
     "id": "dup-c07",
-    "topic": "10-month jumbo special certificate [10 Month Fixed Jumbo Certificate Special] APY/rate",
-    "topic_keywords": [
-      "10-month",
-      "jumbo",
-      "special",
-      "certificate"
-    ],
-    "values": [
-      "3.86%",
-      "3.90%",
-      "3.96%",
-      "4.00%"
-    ],
-    "correct_value": "4.00%"
-  },
-  {
-    "id": "dup-c08",
-    "topic": "10-month special certificate [10 Month Fixed Certificate Special] APY/rate",
-    "topic_keywords": [
-      "10-month",
-      "special",
-      "certificate",
-      "month"
-    ],
-    "values": [
-      "3.76%",
-      "3.80%",
-      "3.86%",
-      "3.90%"
-    ],
-    "correct_value": "3.90%"
-  },
-  {
-    "id": "dup-c09",
-    "topic": "17-month business jumbo special certificate [17 Month Fixed Jumbo Certificate Special] APY/rate",
+    "topic": "17-month jumbo special certificate [17 Month Fixed Jumbo Certificate Special] APY/rate",
     "topic_keywords": [
       "17-month",
-      "business",
       "jumbo",
       "special"
     ],
@@ -164,51 +109,12 @@
     "correct_value": "4.20%"
   },
   {
-    "id": "dup-c10",
-    "topic": "17-month business special certificate [17 Month Fixed Certificate Special] APY/rate",
-    "topic_keywords": [
-      "17-month",
-      "business",
-      "special",
-      "certificate"
-    ],
-    "values": [
-      "3.81%",
-      "3.85%",
-      "3.91%",
-      "3.95%",
-      "4.06%",
-      "4.10%"
-    ],
-    "correct_value": "4.10%"
-  },
-  {
-    "id": "dup-c11",
-    "topic": "17-month jumbo special certificate [17 Month Fixed Jumbo Certificate Special] APY/rate",
-    "topic_keywords": [
-      "17-month",
-      "jumbo",
-      "special",
-      "certificate"
-    ],
-    "values": [
-      "3.91%",
-      "3.95%",
-      "4.01%",
-      "4.05%",
-      "4.15%",
-      "4.20%"
-    ],
-    "correct_value": "4.20%"
-  },
-  {
-    "id": "dup-c12",
+    "id": "dup-c08",
     "topic": "17-month special certificate [17 Month Fixed Certificate Special] APY/rate",
     "topic_keywords": [
       "17-month",
       "special",
-      "certificate",
-      "month"
+      "certificate"
     ],
     "values": [
       "3.81%",
@@ -221,13 +127,11 @@
     "correct_value": "4.10%"
   },
   {
-    "id": "dup-c13",
-    "topic": "business checking [$5,000 - $24,999.99] APY/rate",
+    "id": "dup-c09",
+    "topic": "st checking ($5,000 to $25,000) [1st Rate Checking | $5,000 \u2013 $24,999.99] APY/rate",
     "topic_keywords": [
-      "business",
-      "checking",
-      "$5,000",
-      "$24,999.99"
+      "st",
+      "checking"
     ],
     "values": [
       "2.47%",
@@ -238,30 +142,12 @@
     "correct_value": "2.50%"
   },
   {
-    "id": "dup-c14",
-    "topic": "st checking [1st Rate Checking | $5,000 \u2013 $24,999.99] APY/rate",
-    "topic_keywords": [
-      "checking",
-      "1st",
-      "$5,000",
-      "$24,999.99"
-    ],
-    "values": [
-      "2.47%",
-      "2.50%",
-      "2.96%",
-      "3.00%"
-    ],
-    "correct_value": "2.50%"
-  },
-  {
-    "id": "dup-c15",
+    "id": "dup-c10",
     "topic": "balance transfer introductory platinum credit card [Introductory Balance Transfer Rate] APR",
     "topic_keywords": [
       "balance",
       "transfer",
-      "introductory",
-      "platinum"
+      "introductory"
     ],
     "values": [
       "12.50% \u2013 19.50%",
@@ -270,11 +156,12 @@
     "correct_value": "2.90%"
   },
   {
-    "id": "dup-c16",
+    "id": "dup-c11",
     "topic": "home equity APR",
     "topic_keywords": [
       "home",
-      "equity"
+      "equity",
+      "APR"
     ],
     "values": [
       "21.00%",
@@ -283,30 +170,12 @@
     "correct_value": "6.25%"
   },
   {
-    "id": "dup-c17",
-    "topic": "15-year conventional refinance home equity [Refinance: 15-Year Fixed Conventional] APR/rate",
-    "topic_keywords": [
-      "15-year",
-      "conventional",
-      "refinance",
-      "home"
-    ],
-    "values": [
-      "5.625%",
-      "5.749%",
-      "6.75%",
-      "6.88%"
-    ],
-    "correct_value": "6.88%"
-  },
-  {
-    "id": "dup-c18",
+    "id": "dup-c12",
     "topic": "20-year conventional refinance home equity [Refinance: 20-Year Fixed Conventional] APR/rate",
     "topic_keywords": [
       "20-year",
       "conventional",
-      "refinance",
-      "home"
+      "refinance"
     ],
     "values": [
       "6.000%",
@@ -317,166 +186,28 @@
     "correct_value": "7.28%"
   },
   {
-    "id": "dup-c19",
-    "topic": "30-year conventional refinance home equity APR/rate",
+    "id": "dup-c13",
+    "topic": "30-year conventional refinance home equity ($0 to $100,000) [Refinance: 30-Year Fixed Conventional $100000 or less] APR/rate",
     "topic_keywords": [
       "30-year",
       "conventional",
-      "refinance",
-      "home"
+      "refinance"
     ],
     "values": [
       "6.000%",
-      "6.091%",
-      "6.125%",
       "6.148%",
-      "6.198%",
-      "6.375%",
-      "6.425%",
       "7.13%",
-      "7.25%",
-      "7.28%",
-      "7.30%",
-      "7.33%",
-      "7.35%"
+      "7.28%"
     ],
     "correct_value": "7.28%"
   },
   {
-    "id": "dup-c20",
-    "topic": "10-month jumbo roth special IRA certificate [Roth: 10 Month Fixed Jumbo Special] APY/rate",
-    "topic_keywords": [
-      "10-month",
-      "jumbo",
-      "roth",
-      "special"
-    ],
-    "values": [
-      "3.86%",
-      "3.90%",
-      "3.96%",
-      "4.00%"
-    ],
-    "correct_value": "4.00%"
-  },
-  {
-    "id": "dup-c21",
-    "topic": "10-month roth special IRA certificate [Roth: 10 Month Fixed Special] APY/rate",
-    "topic_keywords": [
-      "10-month",
-      "roth",
-      "special",
-      "ira"
-    ],
-    "values": [
-      "3.76%",
-      "3.80%",
-      "3.86%",
-      "3.90%"
-    ],
-    "correct_value": "3.90%"
-  },
-  {
-    "id": "dup-c22",
-    "topic": "10-month special traditional IRA certificate [Traditional: 10 Month Fixed Special] APY/rate",
-    "topic_keywords": [
-      "10-month",
-      "special",
-      "traditional",
-      "ira"
-    ],
-    "values": [
-      "3.76%",
-      "3.80%",
-      "3.86%",
-      "3.90%"
-    ],
-    "correct_value": "3.90%"
-  },
-  {
-    "id": "dup-c23",
-    "topic": "17-month jumbo roth special IRA certificate [Roth: 17 Month Fixed Jumbo Special] APY/rate",
-    "topic_keywords": [
-      "17-month",
-      "jumbo",
-      "roth",
-      "special"
-    ],
-    "values": [
-      "3.91%",
-      "3.95%",
-      "4.01%",
-      "4.05%",
-      "4.15%",
-      "4.20%"
-    ],
-    "correct_value": "4.20%"
-  },
-  {
-    "id": "dup-c24",
-    "topic": "17-month jumbo special traditional IRA certificate [Traditional: 17 Month Fixed Jumbo Special] APY/rate",
-    "topic_keywords": [
-      "17-month",
-      "jumbo",
-      "special",
-      "traditional"
-    ],
-    "values": [
-      "3.91%",
-      "3.95%",
-      "4.01%",
-      "4.05%",
-      "4.15%",
-      "4.20%"
-    ],
-    "correct_value": "4.20%"
-  },
-  {
-    "id": "dup-c25",
-    "topic": "17-month roth special IRA certificate [Roth: 17 Month Fixed Special] APY/rate",
-    "topic_keywords": [
-      "17-month",
-      "roth",
-      "special",
-      "ira"
-    ],
-    "values": [
-      "3.81%",
-      "3.85%",
-      "3.91%",
-      "3.95%",
-      "4.06%",
-      "4.10%"
-    ],
-    "correct_value": "4.10%"
-  },
-  {
-    "id": "dup-c26",
-    "topic": "17-month special traditional IRA certificate [Traditional: 17 Month Fixed Special] APY/rate",
-    "topic_keywords": [
-      "17-month",
-      "special",
-      "traditional",
-      "ira"
-    ],
-    "values": [
-      "3.81%",
-      "3.85%",
-      "3.91%",
-      "3.95%",
-      "4.06%",
-      "4.10%"
-    ],
-    "correct_value": "4.10%"
-  },
-  {
-    "id": "dup-c27",
+    "id": "dup-c14",
     "topic": "25-month special traditional IRA certificate [Traditional: 25 Month Fixed Special] APY/rate",
     "topic_keywords": [
       "25-month",
       "special",
-      "traditional",
-      "ira"
+      "traditional"
     ],
     "values": [
       "3.57%",
@@ -487,8 +218,8 @@
     "correct_value": "3.85%"
   },
   {
-    "id": "dup-c28",
-    "topic": "money market achieve money market APY/rate",
+    "id": "dup-c15",
+    "topic": "money market achieve money market ($25,000 to $100,000) [Achieve Money Market | $25,000-$99,999.99] APY/rate",
     "topic_keywords": [
       "money",
       "market",
@@ -503,13 +234,12 @@
     "correct_value": "3.25%"
   },
   {
-    "id": "dup-c29",
+    "id": "dup-c16",
     "topic": "15-year conventional purchase mortgage [Purchase: 15-Year Fixed Conventional] APR/rate",
     "topic_keywords": [
       "15-year",
       "conventional",
-      "purchase",
-      "mortgage"
+      "purchase"
     ],
     "values": [
       "5.375%",
@@ -528,13 +258,12 @@
     "correct_value": "6.88%"
   },
   {
-    "id": "dup-c30",
+    "id": "dup-c17",
     "topic": "15-year conventional refinance mortgage [Refinance: 15-Year Fixed Conventional] APR/rate",
     "topic_keywords": [
       "15-year",
       "conventional",
-      "refinance",
-      "mortgage"
+      "refinance"
     ],
     "values": [
       "5.375%",
@@ -554,13 +283,12 @@
     "correct_value": "6.88%"
   },
   {
-    "id": "dup-c31",
+    "id": "dup-c18",
     "topic": "20-year conventional purchase mortgage [Purchase: 20-Year Fixed Conventional] APR/rate",
     "topic_keywords": [
       "20-year",
       "conventional",
-      "purchase",
-      "mortgage"
+      "purchase"
     ],
     "values": [
       "5.625%",
@@ -581,13 +309,12 @@
     "correct_value": "7.26%"
   },
   {
-    "id": "dup-c32",
+    "id": "dup-c19",
     "topic": "20-year conventional refinance mortgage [Refinance: 20-Year Fixed Conventional] APR/rate",
     "topic_keywords": [
       "20-year",
       "conventional",
-      "refinance",
-      "mortgage"
+      "refinance"
     ],
     "values": [
       "5.625%",
@@ -608,112 +335,64 @@
     "correct_value": "7.28%"
   },
   {
-    "id": "dup-c33",
-    "topic": "30-year conventional purchase mortgage APR/rate",
+    "id": "dup-c20",
+    "topic": "30-year conventional purchase mortgage ($0 to $100,000) [Purchase: 30-Year Fixed Conventional $100,000 or less] APR/rate",
     "topic_keywords": [
       "30-year",
       "conventional",
-      "purchase",
-      "mortgage"
+      "purchase"
     ],
     "values": [
       "5.625%",
       "5.750%",
       "5.758%",
-      "5.828%",
       "5.875%",
       "5.884%",
-      "5.912%",
-      "5.935%",
-      "5.954%",
-      "6.000%",
       "6.010%",
-      "6.037%",
-      "6.061%",
-      "6.079%",
       "6.125%",
-      "6.162%",
-      "6.186%",
       "6.250%",
       "6.256%",
       "6.262%",
-      "6.331%",
       "6.375%",
       "6.388%",
-      "6.413%",
-      "6.437%",
-      "6.449%",
-      "6.456%",
-      "6.500%",
       "6.514%",
-      "6.538%",
-      "6.563%",
-      "6.625%",
-      "6.663%",
       "7.13%",
-      "7.25%",
-      "7.27%",
-      "7.29%",
-      "7.32%",
-      "7.34%"
+      "7.27%"
     ],
     "correct_value": "7.27%"
   },
   {
-    "id": "dup-c34",
-    "topic": "30-year conventional refinance mortgage APR/rate",
+    "id": "dup-c21",
+    "topic": "30-year conventional refinance mortgage ($0 to $100,000) [Refinance: 30-Year Fixed Conventional $100,000 or less] APR/rate",
     "topic_keywords": [
       "30-year",
       "conventional",
-      "refinance",
-      "mortgage"
+      "refinance"
     ],
     "values": [
       "5.625%",
       "5.750%",
       "5.770%",
-      "5.840%",
       "5.875%",
       "5.896%",
-      "5.923%",
-      "5.947%",
-      "5.966%",
-      "6.000%",
       "6.022%",
-      "6.049%",
-      "6.072%",
-      "6.091%",
       "6.125%",
-      "6.174%",
-      "6.198%",
       "6.250%",
       "6.274%",
-      "6.343%",
       "6.375%",
       "6.400%",
-      "6.425%",
-      "6.449%",
-      "6.468%",
-      "6.500%",
       "6.526%",
-      "6.550%",
-      "6.575%",
-      "6.625%",
-      "6.675%",
       "7.13%",
-      "7.25%",
-      "7.28%",
-      "7.30%",
-      "7.33%",
-      "7.35%"
+      "7.28%"
     ],
     "correct_value": "7.28%"
   },
   {
-    "id": "dup-c35",
+    "id": "dup-c22",
     "topic": "branches number of count",
     "topic_keywords": [
-      "branches"
+      "branches",
+      "count"
     ],
     "values": [
       "18",
@@ -726,18 +405,47 @@
     "correct_value": "22"
   },
   {
-    "id": "dup-c36",
-    "topic": "business share savings [Business Share Savings | $10,000 \u2013 $24,999.99] rate",
+    "id": "dup-c23",
+    "topic": "business share savings ($10,000 to $25,000) [Business Share Savings | $10,000 \u2013 $24,999.99] rate",
     "topic_keywords": [
       "business",
       "share",
-      "savings",
-      "$10,000"
+      "savings"
     ],
     "values": [
       "0.15%",
       "0.20%"
     ],
     "correct_value": "0.15%"
+  },
+  {
+    "id": "dup-c24",
+    "topic": "number of consecutive years participation dividend paid",
+    "topic_keywords": [
+      "consecutive",
+      "years",
+      "participation"
+    ],
+    "values": [
+      "fifth",
+      "sixth",
+      "seventh",
+      "eighth"
+    ],
+    "correct_value": "eighth"
+  },
+  {
+    "id": "dup-c25",
+    "topic": "number of times Forbes recognized",
+    "topic_keywords": [
+      "times",
+      "Forbes",
+      "recognized"
+    ],
+    "values": [
+      "fourth",
+      "fifth"
+    ],
+    "correct_value": "fifth"
   }
 ]

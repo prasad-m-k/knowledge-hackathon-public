@@ -192,11 +192,11 @@
   <g transform="translate(746, 392)" filter="url(#shadow)">
     <rect width="494" height="116" rx="8" fill="#FFFFFF" stroke="#F59E0B" stroke-width="1.5"/>
     <text x="12" y="20" fill="#92400E" font-size="11.5" font-weight="700">Conflict list: build_conflicts() (resolve.py)</text>
-    <text x="12" y="39" fill="#1E293B" font-size="10.2">• Folds APY/APR/rate &amp; tiers per coarse (product, term) slot across history</text>
+    <text x="12" y="39" fill="#1E293B" font-size="10.2">• One entry per (product, term): its base tier with a contradiction; copies merged</text>
     <text x="12" y="55" fill="#334155" font-size="10">• Table values compete when present (ignores stray blog prose percentages)</text>
-    <text x="12" y="71" fill="#334155" font-size="10">• Removes self-contradictions from same quote (e.g., intro vs standard APR)</text>
+    <text x="12" y="71" fill="#334155" font-size="10">• Drops same-quote values; ordinals.py adds repeated claims (4th vs 5th time)</text>
     <text x="12" y="87" fill="#334155" font-size="10">• Explains resolution reason (expired offer, lower-authority calc/blog, earlier crawl)</text>
-    <text x="12" y="103" fill="#B45309" font-size="10" font-weight="600">→ List[Conflict(topic, values, sources, resolution, reason)]: 36 entries</text>
+    <text x="12" y="103" fill="#B45309" font-size="10" font-weight="600">→ List[Conflict(topic, values, sources, resolution, reason)]: 25 entries</text>
   </g>
 
   <!-- Connector Arrow Down to Phase 3 -->
